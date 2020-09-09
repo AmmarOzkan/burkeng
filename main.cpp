@@ -6,7 +6,7 @@
 #define TRIGGERCONTROL 50
 #define MULTIS 50
 
-#include "RENG/reng.h"
+#include "RENG/bureng.h"
 
 #define WIDTH 800
 #define HEIGHT 600
@@ -92,7 +92,6 @@ int main()
 		grass2.setTrigger();
 		grass3.setTrigger(),
 		burka.setTrigger();
-		burka.gravity(zeminId);
 		if (sag) {
 			burka.addX(5.0,1.0,zeminId);
 		}
