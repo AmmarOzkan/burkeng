@@ -60,9 +60,11 @@ sf::Font setFont(sf::String filePath, std::string id) {
 	return font;
 }
 
+
+
 class gameObject {
 private:
-	valueXY pos, scale;
+	valueXY pos, scale, *camera;
 	sf::Texture texture;
 	Texturee texturee;
 	sf::RenderWindow* window;
@@ -80,7 +82,7 @@ public:
 	/// <param name="textureWidth">Texture dikey pixel sayýsý</param>
 	/// <param name="id">Komut penceresinde yazýlacak olan ismi</param>
 	/// <param name="yourWindow">Çizilecek olan ekran deðiþkeninin adresi</param>
-	gameObject(sf::String filePath, float x, float y, float scaleX, float scaleY, int textureHeight, int textureWidth, std::string id, sf::RenderWindow* yourWindow) {
+	gameObject(sf::String filePath, float x, float y, float scaleX, float scaleY, int textureHeight, int textureWidth, std::string id, sf::RenderWindow* yourWindow, valueXY * urCamera) {
 		scaleSetted = true;
 		posSetted = true;
 		texturee.height = textureHeight; texturee.width = textureWidth; texturee.id = id;
@@ -89,6 +91,7 @@ public:
 		scale.x = scaleX;
 		scale.y = scaleY;
 		window = yourWindow;
+		camera = urCamera;
 	}
 	/// <summary>
 	/// Oyun objesinin pozisyonunu büyüklüðünü vs ayarlar. Hoj bir sýnýftýr.
@@ -99,7 +102,7 @@ public:
 	/// <param name="scaleX">X geniþleme katsayýsý</param>
 	/// <param name="scaleY">Y geniþleme katsayýsý</param>
 	/// <param name="yourWindow">Çizilecek olan ekran deðiþkeninin adresi</param>
-	gameObject(Texturee urTexturee, float x, float y, float scaleX, float scaleY, sf::RenderWindow* yourWindow) {
+	gameObject(Texturee urTexturee, float x, float y, float scaleX, float scaleY, sf::RenderWindow* yourWindow,valueXY * urCamera) {
 		scaleSetted = true;
 		posSetted = true;
 		std::cout << std::endl << "Texture " << urTexturee.id << " ekleniyor.";
@@ -108,6 +111,7 @@ public:
 		scale.x = scaleX;
 		scale.y = scaleY;
 		window = yourWindow;
+		camera = urCamera;
 	}
 	/// <summary>
 	/// Objeyi ekrana çizer
@@ -118,7 +122,7 @@ public:
 		if (scaleSetted) {
 			sprite.setScale(scale.x, scale.y);
 		}if (posSetted) {
-			sprite.setPosition(pos.x, pos.y);
+			sprite.setPosition(pos.x+camera->x, pos.y+camera->y);
 		}
 		else {
 			sprite.setPosition(10, 10);
@@ -319,7 +323,7 @@ public:
 		if (urTrigger.posX > objectTrigger.posX) return RIGHT;
 		else if (urTrigger.posX + urTrigger.width < objectTrigger.posX + objectTrigger.width) return LEFT;
 		else if (urTrigger.posY > objectTrigger.posY) return UP;
-		else if (urTrigger.posY + urTrigger.height < objectTrigger.posY + objectTrigger.height) return RIGHT;
+		else if (urTrigger.posY + urTrigger.height < objectTrigger.posY + objectTrigger.height) return DOWN;
 		else return NONE;
 	}
 
@@ -334,6 +338,22 @@ public:
 		bool test = triggerClass.isColliding(oObject, trigger);
 		return test;
 
+	}
+
+	/// <summary>
+	/// Çoklu obje kontrolünden herhangi bir objeyle çarpýþýyor mu
+	/// </summary>
+	/// <param name="oObject">Obje triggerý</param>
+	/// <param name="id">Çoklu obje kontrolünden kontrol edilecek olan þeyin idsi</param>
+	/// <returns>Çarpýþtý?</returns>
+	bool isColliding(Trigger oObject, std::string willControl) {
+		bool control = false;
+		for (int i = 0; i < triggerControl.nextTrigger; i++) {
+			if (triggerClass.isColliding(triggerControl.trigger[i][0],oObject) && triggerControl.id[i][0] == willControl || willControl == "") {
+				control = true;
+			}
+		}
+		return control;
 	}
 
 	/// <summary>
@@ -372,26 +392,35 @@ public:
 	tValBool addX(float w, float perf, std::string willControl) {
 		tValBool b = { false, false };
 		if (w > 0) {
-			for (float i = 0; i < w; i += perf) {
-				float prevPos = object->position()->x;
-				object->position()->x += perf;
-				if (control(willControl)) {
+			for (float i = 0.0; i < w; i += perf) {
+				Trigger preTrigger;
+				triggerClass.setTrigger(&preTrigger, object);
+				preTrigger.posX += perf;
+				if (isColliding(preTrigger, willControl)) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
 					b.b1 = true;
-					object->position()->x -= perf;
+					std::cout << std::endl << "Carptigi icin asagi inilmedi." << std::endl;
 					break;
+				}
+				else {
+					object->position()->x += perf;
 				}
 			}
 		}
 		else if (w < 0) {
-			for (float i = 0; i > w; i -= perf) {
-				float prevPos = object->position()->x;
-				object->position()->x -= perf;
-				if (control(willControl)) {
+			for (float i = 0.0; i > w; i -= perf) {
+				Trigger preTrigger;
+				triggerClass.setTrigger(&preTrigger, object);
+				preTrigger.posX -= perf;
+				if (isColliding(preTrigger, willControl)) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
 					b.b2 = true;
-					object->position()->x += perf;
+
+					std::cout << std::endl << "Carptigi icin yukari cikilmadi." << std::endl;
 					break;
+				}
+				else {
+					object->position()->x -= perf;
 				}
 			}
 		}
@@ -409,26 +438,35 @@ public:
 	tValBool addY(float w, float perf, std::string willControl) {
 		tValBool b = { false, false };
 		if (w > 0) {
-			for (float i = 0; i < w; i += perf) {
-				float prevPos = object->position()->y;
-				object->position()->y += perf;
-				if (control(willControl)) {
+			for (float i = 0.0; i < w; i += perf) {
+				Trigger preTrigger;
+				triggerClass.setTrigger(&preTrigger, object);
+				preTrigger.posY += perf;
+				if (isColliding(preTrigger,willControl)) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
 					b.b1 = true;
-					object->position()->y -= perf;
+					std::cout << std::endl << "Carptigi icin asagi inilmedi." << std::endl;
 					break;
+				}
+				else {
+					object->position()->y += perf;
 				}
 			}
 		}
 		else if (w < 0) {
-			for (float i = 0; i > w; i -= perf) {
-				float prevPos = object->position()->y;
-				object->position()->y -= perf;
-				if (control(willControl)) {
+			for (float i = 0.0; i > w; i -= perf) {
+				Trigger preTrigger;
+				triggerClass.setTrigger(&preTrigger, object);
+				preTrigger.posY -= perf;
+				if (isColliding(preTrigger, willControl)) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
 					b.b2 = true;
-					object->position()->y += perf;
+
+					std::cout << std::endl << "Carptigi icin yukari cikilmadi." << std::endl;
 					break;
+				}
+				else {
+					object->position()->y -= perf;
 				}
 			}
 		}
@@ -555,7 +593,7 @@ public:
 		}
 	}
 	/// <summary>
-	/// Ekrana çizdirir
+	/// Çoklu çizim yapýlacak objeleri ekranlarýna çizdirir
 	/// </summary>
 	void draw() {
 		for (int i = 0; i < nextMulti; i++) {

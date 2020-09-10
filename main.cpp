@@ -15,6 +15,12 @@
 
 int main()
 {
+	valueXY mouseCamera;
+	mouseCamera.x = 0;
+	mouseCamera.y = 0;
+	valueXY camera;
+	camera.x = 0;
+	camera.y = 0;
 	std::string zeminId = "zemin";
 
 	sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Burkeng");
@@ -29,17 +35,21 @@ int main()
 	Texturee duvarTexture;
 	setTexturee(&duvarTexture, 400, 271, "Duvar", "res/imgs/duvar.jpg");
 	//GAMEOBJECT
-	gameObject mouse(mouseTexture,10,10,0.10,0.10,&window);
-	gameObject burkaObj(burkaTexture,140,10,0.50,0.50,&window);
-	gameObject grassObj(grassTexture, 50, 300, 0.50, 0.50, &window);
-	gameObject grass2Obj(grassTexture, 200, 300, 0.50, 0.50, &window);
-	gameObject grass3Obj(grassTexture, 400, 300, 0.50, 0.50, &window);
-	gameObject duvarObj(duvarTexture, 400,100, 0.50, 0.50, &window);
-	physicsObject burka(&burkaObj,true,1.0,"BURKA");
+	gameObject mouse(mouseTexture, 10, 10, 0.10, 0.10, &window,&mouseCamera);
+	gameObject burkaObj(burkaTexture,140,10,0.50,0.50,&window, &camera);
+	gameObject duvarObj(duvarTexture, 400,100, 0.50, 0.50, &window, &camera);
+
+	//Ýlk Platform
+	gameObject grassObj(grassTexture, 50, 300, 2, 0.50, &window, &camera);
+	gameObject grass2Obj(grassTexture, -800, 300, 0.50, 0.50, &window, &camera);
+	gameObject grass3Obj(grassTexture, -450, 300, 1, 0.50, &window, &camera);
 	physicsObject grass (&grassObj,false,0.0,"Cimen");
 	physicsObject grass2(&grass2Obj, false, 0.0, "Cimen2");
 	physicsObject grass3(&grass3Obj, false, 0.0, "Cimen3");
+
+
 	physicsObject duvar(&duvarObj, false, 0.0, "Duvar");
+	physicsObject burka(&burkaObj, true, 1.0, "BURKA");
 
 	MultiDraw draw;
 	draw.addObject(&burka); draw.addObject(&grass); draw.addObject(&grass2); draw.addObject(&grass3); draw.addObject(&duvar);
@@ -59,6 +69,7 @@ int main()
 	bool sol = false, sag = false;
 	while (window.isOpen())
 	{
+		//Eventler
 		sf::Event event;
 		while (window.pollEvent(event)) {
 			if (event.type == sf::Event::Closed)
@@ -88,20 +99,40 @@ int main()
 				}
 			}
 		}
+
+		//Fizik Olaylarý
 		grass.setTrigger();
 		grass2.setTrigger();
 		grass3.setTrigger(),
 		burka.setTrigger();
+
+
 		if (sag) {
-			burka.addX(5.0,1.0,zeminId);
+			burka.addX(5.0, 0.1, zeminId);
 		}
 		else if (sol) {
-			burka.addX(-5.0, 1.0, zeminId);
+			burka.addX(-5.0, 0.1, zeminId);
 		}
+		burka.addY(1.0, 0.1, zeminId);
+
+		if (burka.getObject()->position()->x < 0) {
+			camera.x = 800;
+			camera.y = 0;
+		}
+		else if (burka.getObject()->position()->x > 0) {
+			camera.x = 0;
+			camera.y = 0;
+		}
+		else if (burka.getObject()->position()->x > 800) {
+			camera.x = -800;
+			camera.y = 0;
+		}
+
 		window.clear(sf::Color::Black);
 		draw.draw();
 		ui.draw();
 		mouse.draw();
+
 		window.display();
 	}
 
