@@ -25,12 +25,66 @@ struct valueXY {
 	float x, y;
 };
 
+
+
 void setTexturee(Texturee* urTexture, int width, int height, std::string id, sf::String filePath) {
 	urTexture->width = width;
 	urTexture->height = height;
 	urTexture->id = id;
 	std::cout << std::endl << "Texture:" << urTexture->id << " yukleme durumu: " << urTexture->texture.loadFromFile(filePath);
 }
+
+struct collideRes {
+	std::string id;
+	bool res;
+};
+struct collideRes2 {
+	std::string id;
+	bool res1, res2;
+};
+
+#ifndef SUPERSTR
+#error SUPERSTR dizisinin kaç tane olduðu belirtilmeli #define SUPERSTR [dizisayisi]
+#else
+struct superStr {
+	std::string str[SUPERSTR];
+	int nextString = 0;
+};
+
+void startSS(superStr* str) {
+	str->nextString = 0;
+}
+
+/// <summary>
+/// SuperSTR'ye string ekler
+/// </summary>
+/// <param name="str">Senin str nesnen</param>
+/// <param name="string">String verisi</param>
+void addString(superStr* str, std::string string) {
+	if (str->nextString == SUPERSTR) {
+		std::cout << std::endl << "SUPERSTR MAXIMUM SINIRI ASILDI";
+	}
+	else {
+		str->str[str->nextString] = string;
+		str->nextString++;
+	}
+}
+
+/// <summary>
+/// SuperSTR'de hiç þu string varmý
+/// </summary>
+/// <param name="str">str nesnen</param>
+/// <param name="string">kontrol edilecek string</param>
+/// <returns>var?</returns>
+bool isThereAnySTR(superStr str, std::string string) {
+	for (int i = 0; i < SUPERSTR; i++) {
+		if (str.str[i] == string) {
+			return true;
+		}
+	}
+	return false;
+}
+#endif
 
 /// <summary>
 /// Pencereni senin için hazýrlar
@@ -64,7 +118,7 @@ sf::Font setFont(sf::String filePath, std::string id) {
 
 class gameObject {
 private:
-	valueXY pos, scale, *camera;
+	valueXY pos, scale, * camera;
 	sf::Texture texture;
 	Texturee texturee;
 	sf::RenderWindow* window;
@@ -82,7 +136,7 @@ public:
 	/// <param name="textureWidth">Texture dikey pixel sayýsý</param>
 	/// <param name="id">Komut penceresinde yazýlacak olan ismi</param>
 	/// <param name="yourWindow">Çizilecek olan ekran deðiþkeninin adresi</param>
-	gameObject(sf::String filePath, float x, float y, float scaleX, float scaleY, int textureHeight, int textureWidth, std::string id, sf::RenderWindow* yourWindow, valueXY * urCamera) {
+	gameObject(sf::String filePath, float x, float y, float scaleX, float scaleY, int textureHeight, int textureWidth, std::string id, sf::RenderWindow* yourWindow, valueXY* urCamera) {
 		scaleSetted = true;
 		posSetted = true;
 		texturee.height = textureHeight; texturee.width = textureWidth; texturee.id = id;
@@ -102,7 +156,7 @@ public:
 	/// <param name="scaleX">X geniþleme katsayýsý</param>
 	/// <param name="scaleY">Y geniþleme katsayýsý</param>
 	/// <param name="yourWindow">Çizilecek olan ekran deðiþkeninin adresi</param>
-	gameObject(Texturee urTexturee, float x, float y, float scaleX, float scaleY, sf::RenderWindow* yourWindow,valueXY * urCamera) {
+	gameObject(Texturee urTexturee, float x, float y, float scaleX, float scaleY, sf::RenderWindow* yourWindow, valueXY* urCamera) {
 		scaleSetted = true;
 		posSetted = true;
 		std::cout << std::endl << "Texture " << urTexturee.id << " ekleniyor.";
@@ -122,13 +176,18 @@ public:
 		if (scaleSetted) {
 			sprite.setScale(scale.x, scale.y);
 		}if (posSetted) {
-			sprite.setPosition(pos.x+camera->x, pos.y+camera->y);
+			sprite.setPosition(pos.x + camera->x, pos.y + camera->y);
 		}
 		else {
 			sprite.setPosition(10, 10);
 		}
 		window->draw(sprite);
 	}
+
+	void setTexturee(Texturee txr) {
+		texturee = txr;
+	}
+
 	/// <summary>
 	/// Pozisyonu ayarlar
 	/// </summary>
@@ -241,6 +300,8 @@ void addNewTrigger(Triggers* urTriggers, Trigger* urTrigger, std::string* id) {
 	}
 }
 
+
+
 /// <summary>
 /// Fizik olaylarýný içinde bulunduran gameObject
 /// </summary>
@@ -252,6 +313,7 @@ private:
 	PhyVal val;
 	valueXY force;
 	Triggers triggerControl;
+	superStr collided;
 public:
 	/// <summary>
 	/// Kontrol edilecek trigger olduðunda kontrol edileceklere ekler
@@ -276,6 +338,7 @@ public:
 		setTrigger();
 		force.x = 0;
 		force.y = 0;
+		startSS(&collided);
 	}
 
 	/// <summary>
@@ -346,14 +409,27 @@ public:
 	/// <param name="oObject">Obje triggerý</param>
 	/// <param name="id">Çoklu obje kontrolünden kontrol edilecek olan þeyin idsi</param>
 	/// <returns>Çarpýþtý?</returns>
-	bool isColliding(Trigger oObject, std::string willControl) {
-		bool control = false;
+	collideRes isColliding(Trigger oObject, std::string willControl) {
+		collideRes res = { "",false };
 		for (int i = 0; i < triggerControl.nextTrigger; i++) {
-			if (triggerClass.isColliding(triggerControl.trigger[i][0],oObject) && triggerControl.id[i][0] == willControl || willControl == "") {
-				control = true;
+			if (triggerClass.isColliding(triggerControl.trigger[i][0], oObject) && ((triggerControl.id[i][0] == willControl) != (willControl == ""))) {
+				res.res = true;
+				res.id = triggerControl.id[i][0];
+				if (!isThereAnySTR(collided, res.id)) {
+					addString(&collided, res.id);
+					std::cout << std::endl << collided.nextString << ":" << collided.str[i];
+				}
 			}
 		}
-		return control;
+		return res;
+	}
+
+	/// <summary>
+	/// Çarpýþan Triggerlarýn idlerini döndürür
+	/// </summary>
+	/// <returns>superStr idler</returns>
+	superStr getCollidings() {
+		return collided;
 	}
 
 	/// <summary>
@@ -389,16 +465,20 @@ public:
 	/// <param name="perf">Performans sayýsý. Kaçar kaçar kontrol edeceði yani</param>
 	/// <param name="willControl">Kontrol edilecek id</param>
 	/// <returns>Ne taraftan çarptýðýna göre 2lik bool döndürür</returns>
-	bool addX(float w, float perf, std::string willControl) {
-		bool b = false;
+	collideRes addX(float w, float perf, std::string willControl) {
+		collideRes res;
+		res.res = false;
+		res.id = "";
 		if (w > 0) {
 			for (float i = 0.0; i < w; i += perf) {
 				Trigger preTrigger;
 				triggerClass.setTrigger(&preTrigger, object);
 				preTrigger.posX += perf;
-				if (isColliding(preTrigger, willControl)) {
+				collideRes colliding = isColliding(preTrigger, willControl);
+				if (colliding.res) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
-					b = true;
+					res.res = true;
+					res.id = colliding.id;
 					break;
 				}
 				else {
@@ -411,9 +491,10 @@ public:
 				Trigger preTrigger;
 				triggerClass.setTrigger(&preTrigger, object);
 				preTrigger.posX -= perf;
-				if (isColliding(preTrigger, willControl)) {
+				collideRes colliding = isColliding(preTrigger, willControl);
+				if (colliding.res) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
-					b = true;
+					res.res = true;
 					break;
 				}
 				else {
@@ -421,7 +502,7 @@ public:
 				}
 			}
 		}
-		return b;
+		return res;
 	}
 
 	/// <summary>
@@ -432,16 +513,20 @@ public:
 	/// <param name="perf">Performans sayýsý. Kaçar kaçar kontrol edeceði yani</param>
 	/// <param name="willControl">Kontrol edilecek id</param>
 	/// <returns>Ne taraftan çarptýðýna göre 2lik bool döndürür</returns>
-	bool addY(float w, float perf, std::string willControl) {
-		bool b = false;
+	collideRes addY(float w, float perf, std::string willControl) {
+		collideRes res;
+		res.res = false;
+		res.id = "";
 		if (w > 0) {
 			for (float i = 0.0; i < w; i += perf) {
 				Trigger preTrigger;
 				triggerClass.setTrigger(&preTrigger, object);
 				preTrigger.posY += perf;
-				if (isColliding(preTrigger,willControl)) {
+				collideRes colliding = isColliding(preTrigger, willControl);
+				if (colliding.res) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
-					b = true;
+					res.res = true;
+					res.id = colliding.id;
 					break;
 				}
 				else {
@@ -454,9 +539,11 @@ public:
 				Trigger preTrigger;
 				triggerClass.setTrigger(&preTrigger, object);
 				preTrigger.posY -= perf;
-				if (isColliding(preTrigger, willControl)) {
+				collideRes colliding = isColliding(preTrigger, willControl);
+				if (colliding.res) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
-					b = true;
+					res.res = true;
+					res.id = colliding.id;
 					break;
 				}
 				else {
@@ -464,7 +551,31 @@ public:
 				}
 			}
 		}
-		return b;
+		return res;
+	}
+
+	/// <summary>
+	/// Obje X veya Y pozisyonunda seker
+	/// </summary>
+	/// <param name="isX">Eðer X sekecekse buraya true Y sekecekse false girilir.</param>
+	void bounce(bool isX) {
+		if (isX) {
+			force.x /= 1.5;
+			force.x *= -1;
+		}
+		else {
+			force.y /= 1.5;
+			force.y *= -1;
+		}
+	}
+
+	void forceControl() {
+		if (force.x > 50) {
+			force.x = 50;
+		}
+		else if (force.y > 50) {
+			force.y = 50;
+		}
 	}
 
 	/// <summary>
@@ -482,8 +593,6 @@ public:
 	void forceAdd(float x, float y) {
 		force.x += x;
 		force.y += y;
-		std::cout <<std::endl<< "Force " << x << " eklendi. force.x:" << force.x;
-		std::cout << std::endl << "Force " << y << " eklendi. force.y:" << force.y;
 	}
 
 	/// <summary>
@@ -491,15 +600,28 @@ public:
 	/// </summary>
 	/// <param name="perf">Performans deðeri. Kaç birimde bir kontrol edileceði.</param>
 	/// <param name="willControl">Kontrol edilecek id</param>
-	void phyMove(float perf,std::string willControl) {
-		bool x = addX(force.x, perf, willControl);
-		bool y = addY(force.y, perf, willControl);
-		if (addX(force.x, perf, willControl)) {
+	collideRes2 phyMove(float perf, std::string willControl) {
+		collideRes2 res;
+		res.id = "";
+		res.res1 = false;
+		res.res2 = false;
+		if (physicsActive) {
+			forceAdd(0.0, val.gravity);
+		}
+		force.x /= 1.05;
+		collideRes collideX = addX(force.x, perf, willControl);
+		collideRes collideY = addY(force.y, perf, willControl);
+		if (collideX.res) {
 			force.x = 0;
+			bounce(true);
+			res.res1 = true;
 		}
-		else if (addY(force.y, perf, willControl)) {
+		else if (collideY.res) {
 			force.y = 0;
+			bounce(false);
+			res.res2 = true;
 		}
+		return res;
 	}
 
 	/// <summary>
