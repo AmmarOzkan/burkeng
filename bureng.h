@@ -429,7 +429,9 @@ public:
 	/// </summary>
 	/// <returns>superStr idler</returns>
 	superStr getCollidings() {
-		return collided;
+		superStr res = collided;
+		startSS(&collided);
+		return res;
 	}
 
 	/// <summary>

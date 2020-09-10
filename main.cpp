@@ -27,6 +27,7 @@ int main()
 	camera.y = 0;
 
 	std::string zeminId = "zemin";
+	std::string duvarId = "duvar";
 	std::string coinId = "para";
 
 	//Pencere
@@ -91,9 +92,9 @@ int main()
 	addNewTrigger(&world, grass.getTrigger(), &zeminId);
 	addNewTrigger(&world, grass2.getTrigger(), &zeminId);
 	addNewTrigger(&world, grass3.getTrigger(), &zeminId);
-	addNewTrigger(&world, duvar.getTrigger(), &zeminId);
-	addNewTrigger(&world, duvar2.getTrigger(), &zeminId);
-	addNewTrigger(&world, duvar3.getTrigger(), &zeminId);
+	addNewTrigger(&world, duvar.getTrigger(), &duvarId);
+	addNewTrigger(&world, duvar2.getTrigger(), &duvarId);
+	addNewTrigger(&world, duvar3.getTrigger(), &duvarId);
 	addNewTrigger(&world, dashGrass.getTrigger(), &zeminId);
 	addNewTrigger(&world, coin.getTrigger(), &coinId);
 
@@ -184,14 +185,20 @@ int main()
 		}
 
 		//Kamera Haraketleri
-		if(super) camera.x = -burka.getObject()->position()->x + 200 + (-mouse.position()->x / 4)+300;
-		else camera.x = -burka.getObject()->position()->x + 200;
-		if (burka.getObject()->position()->y < -1) {
-			camera.y = -burka.getObject()->position()->y+100;
+		if (super) {
+			camera.x = -burka.getObject()->position()->x + 200 + (-mouse.position()->x / 2) + 300;
+			camera.y = -burka.getObject()->position()->y + 200 + (-mouse.position()->y / 2) + 100;
 		}
-		else {
-			camera.y = 0;
+		else { 
+			camera.x = -burka.getObject()->position()->x + 200;
+			if (burka.getObject()->position()->y < -1) {
+				camera.y = -burka.getObject()->position()->y + 100;
+			}
+			else {
+				camera.y = 0;
+			}
 		}
+		
 		
 
 		//Burka fizikleri
