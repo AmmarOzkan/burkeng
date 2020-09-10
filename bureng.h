@@ -388,9 +388,9 @@ public:
 	/// <param name="w">Ýlerlenecek birim sayýsý</param>
 	/// <param name="perf">Performans sayýsý. Kaçar kaçar kontrol edeceði yani</param>
 	/// <param name="willControl">Kontrol edilecek id</param>
-	/// <returns></returns>
-	tValBool addX(float w, float perf, std::string willControl) {
-		tValBool b = { false, false };
+	/// <returns>Ne taraftan çarptýðýna göre 2lik bool döndürür</returns>
+	bool addX(float w, float perf, std::string willControl) {
+		bool b = false;
 		if (w > 0) {
 			for (float i = 0.0; i < w; i += perf) {
 				Trigger preTrigger;
@@ -398,8 +398,7 @@ public:
 				preTrigger.posX += perf;
 				if (isColliding(preTrigger, willControl)) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
-					b.b1 = true;
-					std::cout << std::endl << "Carptigi icin asagi inilmedi." << std::endl;
+					b = true;
 					break;
 				}
 				else {
@@ -414,9 +413,7 @@ public:
 				preTrigger.posX -= perf;
 				if (isColliding(preTrigger, willControl)) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
-					b.b2 = true;
-
-					std::cout << std::endl << "Carptigi icin yukari cikilmadi." << std::endl;
+					b = true;
 					break;
 				}
 				else {
@@ -434,9 +431,9 @@ public:
 	/// <param name="w">Ýlerlenecek birim sayýsý</param>
 	/// <param name="perf">Performans sayýsý. Kaçar kaçar kontrol edeceði yani</param>
 	/// <param name="willControl">Kontrol edilecek id</param>
-	/// <returns></returns>
-	tValBool addY(float w, float perf, std::string willControl) {
-		tValBool b = { false, false };
+	/// <returns>Ne taraftan çarptýðýna göre 2lik bool döndürür</returns>
+	bool addY(float w, float perf, std::string willControl) {
+		bool b = false;
 		if (w > 0) {
 			for (float i = 0.0; i < w; i += perf) {
 				Trigger preTrigger;
@@ -444,8 +441,7 @@ public:
 				preTrigger.posY += perf;
 				if (isColliding(preTrigger,willControl)) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
-					b.b1 = true;
-					std::cout << std::endl << "Carptigi icin asagi inilmedi." << std::endl;
+					b = true;
 					break;
 				}
 				else {
@@ -460,9 +456,7 @@ public:
 				preTrigger.posY -= perf;
 				if (isColliding(preTrigger, willControl)) {
 					//Burda çarpýþtý ve çarpýþmamýþ hale geri döndü.
-					b.b2 = true;
-
-					std::cout << std::endl << "Carptigi icin yukari cikilmadi." << std::endl;
+					b = true;
 					break;
 				}
 				else {
@@ -478,6 +472,34 @@ public:
 	/// </summary>
 	void forceClear() {
 		force.x = 0; force.y = 0;
+	}
+
+	/// <summary>
+	/// Force'a x ve y deðerleri ekler
+	/// </summary>
+	/// <param name="x">Eklenecek X deðeri</param>
+	/// <param name="y">Eklenecek Y deðeri</param>
+	void forceAdd(float x, float y) {
+		force.x += x;
+		force.y += y;
+		std::cout <<std::endl<< "Force " << x << " eklendi. force.x:" << force.x;
+		std::cout << std::endl << "Force " << y << " eklendi. force.y:" << force.y;
+	}
+
+	/// <summary>
+	/// Forcedaki deðerleri kullanarak haraket iþlemini yapar
+	/// </summary>
+	/// <param name="perf">Performans deðeri. Kaç birimde bir kontrol edileceði.</param>
+	/// <param name="willControl">Kontrol edilecek id</param>
+	void phyMove(float perf,std::string willControl) {
+		bool x = addX(force.x, perf, willControl);
+		bool y = addY(force.y, perf, willControl);
+		if (addX(force.x, perf, willControl)) {
+			force.x = 0;
+		}
+		else if (addY(force.y, perf, willControl)) {
+			force.y = 0;
+		}
 	}
 
 	/// <summary>
@@ -502,6 +524,10 @@ public:
 	/// <returns>Objedeki Trigger</returns>
 	Trigger* getTrigger() {
 		return &trigger;
+	}
+
+	valueXY* getForce() {
+		return &force;
 	}
 };
 #endif
