@@ -7,26 +7,46 @@
 #include <iostream>
 #include <thread>
 
+/// <summary>
+/// 2 Bool veri tutan deðiþken
+/// </summary>
 struct tValBool {
 	bool b1, b2;
 };
 
+/// <summary>
+/// Texturelar için özel deðiþken
+/// Texturee deðiþkeni texturelarda dikey yatay pixel sayýsý gibi birçok veriyi tutar.
+/// </summary>
 struct Texturee {
 	sf::Texture texture;
 	int height, width;
 	std::string id;
 };
 
+/// <summary>
+/// 2 tane float tutan deðiþken
+/// </summary>
 struct f2 {
 	float f1, f2;
 };
 
+/// <summary>
+/// X ve Y verisi tutan Vector2
+/// </summary>
 struct valueXY {
 	float x, y;
 };
 
 
-
+/// <summary>
+/// Texturee deðiþkeni baþlatýcýsý
+/// </summary>
+/// <param name="urTexture">Texturee deðiþkeninin adresi</param>
+/// <param name="width">Dosyanýn yatay pixel sayýsý</param>
+/// <param name="height">Dosyanýn dikey pixel sayýsý</param>
+/// <param name="id">Texture idsi</param>
+/// <param name="filePath">Dosya yolu</param>
 void setTexturee(Texturee* urTexture, int width, int height, std::string id, sf::String filePath) {
 	urTexture->width = width;
 	urTexture->height = height;
@@ -34,10 +54,17 @@ void setTexturee(Texturee* urTexture, int width, int height, std::string id, sf:
 	std::cout << std::endl << "Texture:" << urTexture->id << " yukleme durumu: " << urTexture->texture.loadFromFile(filePath);
 }
 
+/// <summary>
+/// Objelerin çarpýþmalarýndan sonra döndürülen deðer.
+/// </summary>
 struct collideRes {
 	std::string id;
 	bool res;
 };
+
+/// <summary>
+/// Objelerin çarpýþmalarýndan sonra döndürülen deðer.
+/// </summary>
 struct collideRes2 {
 	std::string id;
 	bool res1, res2;
@@ -46,11 +73,18 @@ struct collideRes2 {
 #ifndef SUPERSTR
 #error SUPERSTR dizisinin kaç tane olduðu belirtilmeli #define SUPERSTR [dizisayisi]
 #else
+/// <summary>
+/// Ýçinde bir çok string deðeri barýndýran deðiþken
+/// </summary>
 struct superStr {
 	std::string str[SUPERSTR];
 	int nextString = 0;
 };
 
+/// <summary>
+/// superStr deðiþkeni için bir baþlatýcý
+/// </summary>
+/// <param name="str">superStr deðiþkeninin adresi</param>
 void startSS(superStr* str) {
 	str->nextString = 0;
 }
@@ -83,6 +117,12 @@ bool isThereAnySTR(superStr str, std::string string) {
 		}
 	}
 	return false;
+}
+
+void clearSTR(superStr* str) {
+	for (int i = 0; i < SUPERSTR; i++) {
+		str->str[i] = "";
+	}
 }
 #endif
 
@@ -400,7 +440,16 @@ public:
 		trigger.id = "Burka";
 		bool test = triggerClass.isColliding(oObject, trigger);
 		return test;
+	}
 
+	void setColliding() {
+		for (int i = 0; i < triggerControl.nextTrigger; i++) {
+			if (triggerClass.isColliding(triggerControl.trigger[i][0], trigger)) {
+				if (!isThereAnySTR(collided, triggerControl.id[i][0])) {
+					addString(&collided, triggerControl.id[i][0]);
+				}
+			}
+		}
 	}
 
 	/// <summary>
@@ -417,7 +466,6 @@ public:
 				res.id = triggerControl.id[i][0];
 				if (!isThereAnySTR(collided, res.id)) {
 					addString(&collided, res.id);
-					std::cout << std::endl << collided.nextString << ":" << collided.str[i];
 				}
 			}
 		}
@@ -431,6 +479,7 @@ public:
 	superStr getCollidings() {
 		superStr res = collided;
 		startSS(&collided);
+		clearSTR(&collided);
 		return res;
 	}
 
@@ -571,12 +620,17 @@ public:
 		}
 	}
 
-	void forceControl() {
-		if (force.x > 50) {
-			force.x = 50;
+	void forceControl(float x, float y) {
+		if (force.x > x) {
+			force.x = x;
 		}
-		else if (force.y > 50) {
-			force.y = 50;
+		else if (force.x < -x) {
+			force.x = -x;
+		}if (force.y > y) {
+			force.y = y;
+		}
+		else if (force.y < -y) {
+			force.y = -y;
 		}
 	}
 
@@ -657,6 +711,14 @@ public:
 #endif
 
 
+/// <summary>
+/// Buton Classý
+/// </summary>
+class Button {
+
+};
+
+
 //Bir dizide kaç tane UIELEMENT olduðunu belirtmemiz istenir.
 //Bu þekilde kütüphaneyi yapan deðil kütüphaneyi kullanan dizilerin kaç tane olduðunu belirtmiþ olur.
 #ifndef UIELEMENTS
@@ -691,7 +753,7 @@ public:
 	/// <param name="string">Yazý</param>
 	/// <param name="posX">Pozisyon X</param>
 	/// <param name="posY">Pozisyon Y</param>
-	void setObj(int array, sf::String string, int posX, int posY) {
+	void setText(int array, sf::String string, int posX, int posY) {
 		texts[array].setString(string);
 		texts[array].setFont(font);
 		texts[array].setPosition(posX, posY);
@@ -705,6 +767,8 @@ public:
 	sf::Text* getText(int array) {
 		return &texts[array];
 	}
+
+	
 
 	/// <summary>
 	/// UI Objelerini ekrana çizdirir.
