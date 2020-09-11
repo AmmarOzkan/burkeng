@@ -3,6 +3,44 @@
 #ifndef BURENG
 #define BURENG
 
+#define TEXTURELOAD "Texture:" << urTexture->id << " yukleme durumu: " << urTexture->texture.loadFromFile(filePath)
+#define FONTLOAD "Font " << id << " Yukleme Durumu: " << font.loadFromFile("res/fonts/batmfo__.ttf")
+#define FONTERROR "Font " << id << " yuklenmesinde bir hata meydana geldi."
+#define GAMEOBJECTTEXTURELOAD "Texture:" << texturee.id << " yukleme durumu: " << texturee.texture.loadFromFile(filePath)
+#define ADDINGTEXTURE "Texture " << urTexturee.id << " ekleniyor."
+#define CREATINGPHYOBJ "Fizik Objesi: " << id << " olusturuldu."
+#define CREATINGBUTTON "Buton:" << id << " olusturuldu."
+
+#ifndef TEXTURELOAD
+#error #define TEXTURELOAD komut penceresine yazýlacak olan yazýyý belirtir. (Texture yükleme) Kullanabileceklerin:
+#error urTexture->id = texture idsi; urTexture->texture.loadFromFile(filePath) = yükleme durumu;
+#endif
+#ifndef FONTLOAD
+#error #define FONTLOAD komut penceresinde yazýlacak olan yazýyý belirtir. (Font yükleme) Kullanabileceklerin:
+#error id = font idsi; font.loadFromFile("res/fonts/batmfo__.ttf") = yüklenme durumu
+#endif
+#ifndef FONTERROR
+#error #define FONTERROR komut penceresinde yazýlacak olan yazýyý belirtir. (Font hatasý) Kullanabileceklerin:
+#error id = font idsi
+#endif
+#ifndef GAMEOBJECTTEXTURELOAD
+#error #define GAMEOBJECTTEXTURELOAD komut penceresinde yazýlacak olan yazýyý belirtir. (Game object için texture yükleme) Kullanabileceklerin:
+#error texturee->id = texture idsi; texturee.texture.loadFromFile(filePath) = yükleme durumu;
+#endif
+#ifndef ADDINGTEXTURE
+#error #define ADDINGTEXTURE komut penceresinde yazýlacak olan yazýyý belirtir. (Objeye Texture ekleme) Kullanabileceklerin:
+#error urTexturee.id = texture idsi
+#endif
+#ifndef CREATINGPHYOBJ
+#error #define FONTERROR komut penceresinde yazýlacak olan yazýyý belirtir. (Fizik Objesi Yaratma) Kullanabileceklerin:
+#error id = fizik objesi idsi
+#endif
+#ifndef CREATINGBUTTON
+#error #define FONTERROR komut penceresinde yazýlacak olan yazýyý belirtir. (Fizik Objesi Yaratma) Kullanabileceklerin:
+#error id = buton idsi
+#endif
+
+
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <thread>
@@ -51,7 +89,7 @@ void setTexturee(Texturee* urTexture, int width, int height, std::string id, sf:
 	urTexture->width = width;
 	urTexture->height = height;
 	urTexture->id = id;
-	std::cout << std::endl << "Texture:" << urTexture->id << " yukleme durumu: " << urTexture->texture.loadFromFile(filePath);
+	std::cout << std::endl << TEXTURELOAD;
 }
 
 /// <summary>
@@ -146,9 +184,9 @@ void setWindow(sf::RenderWindow& window, int frameRate) {
 /// <returns>Yeni fontu döndürür.</returns>
 sf::Font setFont(sf::String filePath, std::string id) {
 	sf::Font font;
-	std::cout << std::endl << "Font " << id << " Yukleme Durumu: " << font.loadFromFile("res/fonts/batmfo__.ttf");
+	std::cout << std::endl << FONTLOAD;
 	if (!font.loadFromFile("res/fonts/batmfo__.ttf")) {
-		std::cout << std::endl << "Font " << id << " yuklenmesinde bir hata meydana geldi.";
+		std::cout << std::endl << FONTERROR;
 
 	}
 	return font;
@@ -176,14 +214,20 @@ public:
 	/// <param name="textureWidth">Texture dikey pixel sayýsý</param>
 	/// <param name="id">Komut penceresinde yazýlacak olan ismi</param>
 	/// <param name="yourWindow">Çizilecek olan ekran deðiþkeninin adresi</param>
-	gameObject(sf::String filePath, float x, float y, float scaleX, float scaleY, int textureHeight, int textureWidth, std::string id, sf::RenderWindow* yourWindow, valueXY* urCamera) {
+	gameObject(sf::String filePath, float x, float y, float scaleX, float scaleY, bool math, int textureHeight, int textureWidth, std::string id, sf::RenderWindow* yourWindow, valueXY* urCamera) {
 		scaleSetted = true;
 		posSetted = true;
 		texturee.height = textureHeight; texturee.width = textureWidth; texturee.id = id;
-		std::cout << std::endl << "Texture:" << texturee.id << " yukleme durumu: " << texturee.texture.loadFromFile(filePath);
+		std::cout << std::endl << GAMEOBJECTTEXTURELOAD;
 		pos.x = x; pos.y = y;
-		scale.x = scaleX;
-		scale.y = scaleY;
+		if (!math) {
+			scale.x = scaleX;
+			scale.y = scaleY;
+		}
+		else {
+			scale.x = scaleX / texturee.width;
+			scale.y = scaleY / texturee.height;
+		}
 		window = yourWindow;
 		camera = urCamera;
 	}
@@ -195,18 +239,26 @@ public:
 	/// <param name="y">Y pozisyonu</param>
 	/// <param name="scaleX">X geniþleme katsayýsý</param>
 	/// <param name="scaleY">Y geniþleme katsayýsý</param>
+	/// <param name="math">Eðer true ise scaleX ve scaleY geniþletme katsayýsý deðil hedef uzunluk ve yükseklik olur</param>
 	/// <param name="yourWindow">Çizilecek olan ekran deðiþkeninin adresi</param>
-	gameObject(Texturee urTexturee, float x, float y, float scaleX, float scaleY, sf::RenderWindow* yourWindow, valueXY* urCamera) {
+	gameObject(Texturee urTexturee, float x, float y, float scaleX, float scaleY, bool math, sf::RenderWindow* yourWindow, valueXY* urCamera) {
 		scaleSetted = true;
 		posSetted = true;
-		std::cout << std::endl << "Texture " << urTexturee.id << " ekleniyor.";
+		std::cout << std::endl << ADDINGTEXTURE;
 		texturee = urTexturee;
 		pos.x = x; pos.y = y;
-		scale.x = scaleX;
-		scale.y = scaleY;
+		if (!math) {
+			scale.x = scaleX;
+			scale.y = scaleY;
+		}
+		else {
+			scale.x = scaleX / texturee.width;
+			scale.y = scaleY / texturee.height;
+		}
 		window = yourWindow;
 		camera = urCamera;
 	}
+
 	/// <summary>
 	/// Objeyi ekrana çizer
 	/// </summary>
@@ -282,6 +334,11 @@ public:
 		trigger->posY = urObject->position()->y;
 		trigger->height = urObject->getTexturee()->height * urObject->getScale()->y;
 		trigger->width = urObject->getTexturee()->width * urObject->getScale()->x;
+	}
+	void setTrigger(Trigger* trigger, float x, float y, float height, float width, float scaleX, float scaleY) {
+		trigger->posX = x; trigger->posY = y;
+		trigger->height = height * scaleX;
+		trigger->width = width * scaleY;
 	}
 }triggerClass;
 
@@ -393,7 +450,7 @@ public:
 	{
 		fixStart();
 		setPhyVal(&val, gravity);
-		std::cout << std::endl << "Fizik Objesi: " << id << " olusturuldu.";
+		std::cout << std::endl << CREATINGPHYOBJ;
 	}
 	/// <summary>
 	/// physicsObject oluþturucusu
@@ -406,7 +463,7 @@ public:
 		: object(urObject), val(urVal), physicsActive(physicsIsActive)
 	{
 		fixStart();
-		std::cout << std::endl << "Fizik Objesi: " << id << " olusturuldu.";
+		std::cout << std::endl << CREATINGPHYOBJ;
 	}
 
 	/// <summary>
@@ -715,7 +772,54 @@ public:
 /// Buton Classý
 /// </summary>
 class Button {
+private:
+	Texturee txr;
+	valueXY pos;
+	valueXY scale;
+	sf::RenderWindow *window;
+	Trigger t;
+public:
+	/// <summary>
+	/// Baþlangýç
+	/// </summary>
+	/// <param name="texture">Texture deðiþkeni</param>
+	/// <param name="id">Button id</param>
+	/// <param name="x">X pozisyonu</param>
+	/// <param name="y">Y pozisyonu</param>
+	/// <param name="urWindow">Pencerenin adresi</param>
+	Button(Texturee texture,std::string id, float x, float y, float width, float height,sf::RenderWindow *urWindow)
+		: txr(texture), window(urWindow)
+	{
+		pos.x = x; pos.y = y;
+		scale.x = width / txr.width;
+		scale.y = height / txr.height;
+		triggerClass.setTrigger(&t, pos.x, pos.y, txr.height*scale.y, txr.width*scale.x, 1, 1);
+	}
 
+	/// <summary>
+	/// Buton objesini ekrana çizdirir
+	/// </summary>
+	void draw() {
+		sf::Sprite sprite;
+		sprite.setTexture(txr.texture);
+
+		sprite.setScale(scale.x, scale.y);
+		sprite.setPosition(pos.x, pos.y);
+
+		window->draw(sprite);
+	}
+
+	/// <summary>
+	/// Butona basýlýp basýlmadýðýný kontrol etmeyi saðlar
+	/// </summary>
+	/// <param name="event">Pencere Eventi</param>
+	/// <returns>Basýldý?</returns>
+	bool control(sf::Event event) {
+		Trigger mouse;
+		triggerClass.setTrigger(&mouse, event.mouseButton.x, event.mouseButton.y, 0, 0, 1, 1);
+		bool b = event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && triggerClass.isColliding(t,mouse);
+		return b;
+	}
 };
 
 
@@ -768,7 +872,7 @@ public:
 		return &texts[array];
 	}
 
-	
+
 
 	/// <summary>
 	/// UI Objelerini ekrana çizdirir.
