@@ -8,6 +8,8 @@
 #define MULTIS 50
 #define DOUBLESTRINGN 50
 #define SUPERSTR 50
+#define ANIMPERFRAME 60
+
 #include "RENG/bureng.h"
 
 #define WIDTH 800
@@ -51,6 +53,12 @@ int main()
 	setTexturee(&backgroundTexture, 275, 183, "BackGround", "res/imgs/arkaplan.jpg");
 	Texturee replayTexture;
 	setTexturee(&replayTexture, 600, 600, "ReplayButtonTexture", "res/imgs/replay.png");
+	Texturee adaTexture;
+	setTexturee(&adaTexture, 512, 384, "AgacTexture", "res/imgs/flyisland.png");
+	Texturee playerTexture;
+	setTexturee(&playerTexture, 512, 512, "PlayerTexture", "res/imgs/player.png");
+	Texturee playerIdleTexture;
+	setTexturee(&playerIdleTexture, 512, 512, "PlayerIdleTexture", "res/imgs/playerIdle.png");
 
 
 	//Mouse
@@ -58,12 +66,22 @@ int main()
 
 	//Arkaplan
 	gameObject background(backgroundTexture, -10, -300, 5, 5, false, &window, &mouseCamera);
+	////Arkaplan adalarý
+	gameObject ada(adaTexture, 50,-150,300,150,true,&window,&camera);
+	gameObject ada1(adaTexture, 150, -50, 400, 300, true, &window, &camera);
+	gameObject ada2(adaTexture, -75, 0, 150, 75, true, &window, &camera);
+	///Arkaplan çizici
+	MultiDraw backgroundDraw;
+
+	///Adalarý ekleyelim
+	backgroundDraw.addObject(&ada2); backgroundDraw.addObject(&ada); backgroundDraw.addObject(&ada1);
 
 	//Platformlarý oluþturma objeleri
 	gameObject grassObj(grassTexture, 50, 300, 2, 0.50, false, &window, &camera);
 	gameObject grass2Obj(grassTexture, -800, 300, 0.50, 0.50, false, &window, &camera);
 	gameObject grass3Obj(grassTexture, -450, 300, 0.5, 0.50, false, &window, &camera);
 	gameObject dashGrassObj(grassTexture, 500,300,20.0,0.5, false, &window,&camera);
+	//Platformlarýn fizik objeleri
 	physicsObject grass (&grassObj,false,0.0,"Cimen");
 	physicsObject grass2(&grass2Obj, false, 0.0, "Cimen2");
 	physicsObject grass3(&grass3Obj, false, 0.0, "Cimen3");
@@ -75,7 +93,7 @@ int main()
 	gameObject duvar3Obj(duvarTexture, 450, 200, 0.50, 0.50, false, &window, &camera);
 	gameObject duvar4Obj(duvarTexture, 800, -100, 0.50, 0.50, false, &window, &camera);
 	gameObject duvar5Obj(duvarTexture, 1100, -200, 0.50, 0.50, false, &window, &camera);
-
+	//Duvar fizik objeleri
 	physicsObject duvar(&duvarObj, false, 0.0, "Duvar");
 	physicsObject duvar2(&duvar2Obj, false, 0.0, "Duvar");
 	physicsObject duvar3(&duvar3Obj, false, 0.0, "Duvar");
@@ -87,8 +105,16 @@ int main()
 	physicsObject coin(&coinObj,false,0.0,coinId);
 
 	//Karakter oluþturma objeleri
-	gameObject burkaObj(burkaTexture, 0, 0, 0.10, 0.10,false, &window, &camera);
+	gameObject burkaObj(playerTexture, 0, 0, 25, 100,true, &window, &camera);
 	physicsObject burka(&burkaObj, true, 2.0, "BURKA");
+
+	//Karakter animasyonu
+	Animation burkaAnimation("BurkaAnimasyon");
+	for (int i = 0; i <= 20; i++) {
+		burkaAnimation.addAnimTexture(playerTexture);
+		burkaAnimation.addAnimTexture(playerIdleTexture);
+		burkaAnimation.addAnimTexture(playerTexture);
+	}
 
 	//Butonlar
 	Button jumpButton(mouseTexture,"JumpButton",0,500,100,100,&window);
@@ -99,11 +125,12 @@ int main()
 	//player
 	draw.addObject(&burka); 
 	//Çimenler
-	draw.addObject(&grass); draw.addObject(&grass2); draw.addObject(&grass3); draw.addObject(&dashGrass); 
+	draw.addObject(&grass); draw.addObject(&grass2); draw.addObject(&grass3); draw.addObject(&dashGrass);
 	//Duvarlar
 	draw.addObject(&duvar); draw.addObject(&duvar2); draw.addObject(&duvar3); draw.addObject(&duvar4); draw.addObject(&duvar5);
 	//Paralar
 	draw.addObject(&coin);
+
 
 	//Dünyadaki triggerlar
 	Triggers world;
@@ -118,9 +145,9 @@ int main()
 	addNewTrigger(&world, duvar3.getTrigger(), &duvarId);
 	addNewTrigger(&world, duvar4.getTrigger(), &duvarId);
 	addNewTrigger(&world, duvar5.getTrigger(), &duvarId);
-
+	//Coin triggerý
 	addNewTrigger(&world, coin.getTrigger(), &coinId);
-
+	//Buraða triggerlarý ekleme
 	burka.setPhyTriggers(world);
 
 	//burka trigger'ýný coine ekleme
@@ -139,24 +166,17 @@ int main()
 	bool super = false;
 	float superJump = 50;
 	bool superJumping = false;
+
+	int worldTurn = 0;
 	while (window.isOpen())
 	{
 		if (super) mouse.setTexturee(aimTexture);
 		//Eventler
 		sf::Event event;
 		while (window.pollEvent(event)) {
-			if (jumpButton.control(event)) {
-				burka.forceAdd(0.0, -40.0);
-				std::cout << std::endl << "Butona Tiklandi";
-			}if (replayButton.control(event)) {
-				burka.getObject()->position()->x = 0;
-				burka.getObject()->position()->y = 0;
-				burka.forceClear();
-				super = false;
-				coin.getObject()->position()->x = 1000;
-				coin.getObject()->position()->y = 100;
-				coin.setTrigger();
-			}
+			//Buton basýldý basýlmadý kontrolü
+			jumpButton.control(event);
+			replayButton.control(event);
 
 
 			if (event.type == sf::Event::Closed)
@@ -224,6 +244,20 @@ int main()
 				superJump--;
 			}
 		}
+		///////Buton ile zýplama
+		if (jumpButton.getClick() && canJump) {
+			burka.forceAdd(0.0, -40.0);
+			std::cout << std::endl << "Butona Tiklandi";
+		}
+		if (replayButton.getClick()) {
+			burka.getObject()->position()->x = 0;
+			burka.getObject()->position()->y = 0;
+			burka.forceClear();
+			super = false;
+			coin.getObject()->position()->x = 1000;
+			coin.getObject()->position()->y = 100;
+			coin.setTrigger();
+		}
 		
 
 		//Haraket iþlemleri
@@ -231,11 +265,15 @@ int main()
 			//burka.addX(7.0, 0.1, zeminId);
 			burka.forceAdd(1.0, 0.0);
 			burka.setTrigger();
+			//Karakter Animasyonu
+			burka.getObject()->setTexturee(burkaAnimation.animate());
 		}
 		else if (sol) {
 			//burka.addX(-7.0, 0.1, zeminId);
 			burka.forceAdd(-1.0, 0.0);
 			burka.setTrigger();
+			//Karakter Animasyonu
+			burka.getObject()->setTexturee(burkaAnimation.animate());
 		}
 
 		//Kamera Haraketleri
@@ -255,6 +293,9 @@ int main()
 
 		//Arkaplan Haraketleri
 		background.position()->x = -burka.getObject()->position()->x / 20-350;
+		ada.position()->x = burka.getObject()->position()->x / 3 + 600 + worldTurn;
+		ada1.position()->x = burka.getObject()->position()->x / 6 + 350 + worldTurn;
+		ada2.position()->x = burka.getObject()->position()->x / 2.5 - 50 + worldTurn;
 		if (super) {
 			background.position()->x = -burka.getObject()->position()->x / 20 - 350 + (-mouse.position()->x / 10);
 			background.position()->y = -burka.getObject()->position()->y / 10 -50 + (-mouse.position()->y / 10);
@@ -298,9 +339,12 @@ int main()
 		std::string puanStr = std::to_string(burka.getForce()->x);
 		ui.getText(1)->setString(puanStr);
 
+
+
 		//Çizdirme
 		window.clear(sf::Color::Black);
 		background.draw();
+		backgroundDraw.draw();
 		draw.draw();
 
 		//Buton
@@ -315,6 +359,8 @@ int main()
 
 		window.setTitle(std::to_string(burka.getObject()->position()->x) + " " + std::to_string(burka.getObject()->position()->y) + ": burkeng");
 		window.display();
+
+		worldTurn++;
 	}
 
 	return 0;

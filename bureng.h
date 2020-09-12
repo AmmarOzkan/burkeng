@@ -10,6 +10,7 @@
 #define ADDINGTEXTURE "Texture " << urTexturee.id << " ekleniyor."
 #define CREATINGPHYOBJ "Fizik Objesi: " << id << " olusturuldu."
 #define CREATINGBUTTON "Buton:" << id << " olusturuldu."
+#define CREATINGANIM "Animasyon:" << id << "olusturuldu."
 
 #ifndef TEXTURELOAD
 #error #define TEXTURELOAD komut penceresine yazýlacak olan yazýyý belirtir. (Texture yükleme) Kullanabileceklerin:
@@ -36,10 +37,13 @@
 #error id = fizik objesi idsi
 #endif
 #ifndef CREATINGBUTTON
-#error #define FONTERROR komut penceresinde yazýlacak olan yazýyý belirtir. (Fizik Objesi Yaratma) Kullanabileceklerin:
+#error #define FONTERROR komut penceresinde yazýlacak olan yazýyý belirtir. (Font hatasi) Kullanabileceklerin:
 #error id = buton idsi
 #endif
-
+#ifndef CREATINGANIM
+#error #define FONTERROR komut penceresinde yazýlacak olan yazýyý belirtir. (Animasyon oluþturma) Kullanabileceklerin:
+#error id = animasyon idsi
+#endif
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -767,6 +771,67 @@ public:
 };
 #endif
 
+#ifndef ANIMPERFRAME
+#error #define ANIMPERFRAME [Kac frame'de bir animasyon degisecegi] tanýmýný yapmak zorundasýn
+#else
+
+/// <summary>
+/// Animasyon deðiþkeni.
+/// </summary>
+class Animation {
+private:
+	Texturee animTextures[ANIMPERFRAME];
+	int anim = 0 ,nextAnim = 0;
+	std::string animId;
+public:
+	/// <summary>
+	/// Animasyon objesi oluþturma
+	/// </summary>
+	/// <param name="urAnimationTextures">Animasyon texturelarýnýn dizi halindeki þeysi</param>
+	/// <param name="id">Komut penceresinde yazýlacak olan id. </param>
+	Animation(Texturee urAnimationTextures[ANIMPERFRAME], std::string id)
+	{
+		for (int i = 0; i < ANIMPERFRAME; i++) {
+			animTextures[i] = urAnimationTextures[i];
+		}
+		std::cout << std::endl << CREATINGANIM;
+		animId = id;
+	}
+	Animation(std::string id) {
+		std::cout << std::endl << CREATINGANIM;
+		animId = id;
+	}
+
+	/// <summary>
+	/// Texturee'yi ekler. Eðer kare sayýsýný geçiyorsa uyarý verir.
+	/// </summary>
+	/// <param name="texture">Eklenecek texture</param>
+	void addAnimTexture(Texturee texture) {
+		if (nextAnim >= ANIMPERFRAME) {
+			std::cout << std::endl << "DAHA FAZLA ANIMASYON TEXTURE EKLENEMIYOR:" << animId;
+		}
+		else {
+			animTextures[nextAnim] = texture;
+			std::cout << std::endl << "ANIMASYON EKLENDI:" << animId << ":" << texture.id;
+		}
+		nextAnim++;
+	}
+
+	/// <summary>
+	/// Animasyon texture'ýný döndürür
+	/// </summary>
+	/// <returns>animasyon texture</returns>
+	Texturee animate() {
+		anim++;
+		if (anim >= ANIMPERFRAME) {
+			anim = 0;
+		}
+		return animTextures[anim];
+	}
+};
+
+#endif
+
 
 /// <summary>
 /// Buton Classý
@@ -778,6 +843,7 @@ private:
 	valueXY scale;
 	sf::RenderWindow *window;
 	Trigger t;
+	bool click = false;
 public:
 	/// <summary>
 	/// Baþlangýç
@@ -813,12 +879,26 @@ public:
 	/// Butona basýlýp basýlmadýðýný kontrol etmeyi saðlar
 	/// </summary>
 	/// <param name="event">Pencere Eventi</param>
-	/// <returns>Basýldý?</returns>
-	bool control(sf::Event event) {
+	void control(sf::Event event) {
 		Trigger mouse;
 		triggerClass.setTrigger(&mouse, event.mouseButton.x, event.mouseButton.y, 0, 0, 1, 1);
-		bool b = event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && triggerClass.isColliding(t,mouse);
-		return b;
+		bool fix = event.mouseButton.button == sf::Mouse::Left && triggerClass.isColliding(t, mouse);
+		bool b = event.type == sf::Event::MouseButtonPressed && fix;
+		bool c = event.type == sf::Event::MouseButtonReleased;
+		if (b) {
+			click = true;
+		}
+		else if (c) {
+			click = false;
+		}
+	}
+
+	/// <summary>
+	/// Butona basýlýp basýlmadýðýný döndürür
+	/// </summary>
+	/// <returns>basýldý?</returns>
+	bool getClick() {
+		return click;
 	}
 };
 
@@ -895,7 +975,9 @@ public:
 class MultiDraw {
 private:
 	physicsObject* objects[MULTIS];
+	gameObject* gmObjects[MULTIS];
 	int nextMulti = 0;
+	int nextGmObject = 0;
 public:
 	/// <summary>
 	/// Çizilecek þeylere bir physicsObject atar
@@ -910,12 +992,26 @@ public:
 			nextMulti++;
 		}
 	}
+	
+	void addObject(gameObject* object) {
+		if (nextGmObject == MULTIS) {
+			std::cout << std::endl << "Maksimum MULTIS";
+		}
+		else {
+			gmObjects[nextGmObject] = object;
+			nextGmObject++;
+		}
+	}
+
 	/// <summary>
 	/// Çoklu çizim yapýlacak objeleri ekranlarýna çizdirir
 	/// </summary>
 	void draw() {
 		for (int i = 0; i < nextMulti; i++) {
 			objects[i]->draw();
+		}
+		for (int i = 0; i < nextGmObject; i++) {
+			gmObjects[i]->draw();
 		}
 	}
 
