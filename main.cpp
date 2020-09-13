@@ -54,7 +54,7 @@ int main()
 	Texturee replayTexture;
 	setTexturee(&replayTexture, 600, 600, "ReplayButtonTexture", "res/imgs/replay.png");
 	Texturee adaTexture;
-	setTexturee(&adaTexture, 512, 384, "AgacTexture", "res/imgs/flyisland.png");
+	setTexturee(&adaTexture, 512, 384, "AdaTexture", "res/imgs/flyisland.png");
 	Texturee playerTexture;
 	setTexturee(&playerTexture, 512, 512, "PlayerTexture", "res/imgs/player.png");
 	Texturee playerIdleTexture;
@@ -110,11 +110,11 @@ int main()
 
 	//Karakter animasyonu
 	Animation burkaAnimation("BurkaAnimasyon");
-	for (int i = 0; i <= 20; i++) {
-		burkaAnimation.addAnimTexture(playerTexture);
-		burkaAnimation.addAnimTexture(playerIdleTexture);
-		burkaAnimation.addAnimTexture(playerTexture);
-	}
+	burkaAnimation.addAnimTexture(playerTexture);
+	burkaAnimation.addAnimTexture(playerIdleTexture);
+	burkaAnimation.addAnimTexture(playerTexture);
+
+
 
 	//Butonlar
 	Button jumpButton(mouseTexture,"JumpButton",0,500,100,100,&window);
@@ -170,7 +170,7 @@ int main()
 	int worldTurn = 0;
 	while (window.isOpen())
 	{
-		if (super) mouse.setTexturee(aimTexture);
+		if (super) mouse.setTexturee(aimTexture,true);
 		//Eventler
 		sf::Event event;
 		while (window.pollEvent(event)) {
@@ -247,7 +247,8 @@ int main()
 		///////Buton ile zýplama
 		if (jumpButton.getClick() && canJump) {
 			burka.forceAdd(0.0, -40.0);
-			std::cout << std::endl << "Butona Tiklandi";
+			burka.setTrigger();
+			canJump = false;
 		}
 		if (replayButton.getClick()) {
 			burka.getObject()->position()->x = 0;
@@ -266,14 +267,14 @@ int main()
 			burka.forceAdd(1.0, 0.0);
 			burka.setTrigger();
 			//Karakter Animasyonu
-			burka.getObject()->setTexturee(burkaAnimation.animate());
+			burka.getObject()->setTexturee(burkaAnimation.animate(), true);
 		}
 		else if (sol) {
 			//burka.addX(-7.0, 0.1, zeminId);
 			burka.forceAdd(-1.0, 0.0);
 			burka.setTrigger();
 			//Karakter Animasyonu
-			burka.getObject()->setTexturee(burkaAnimation.animate());
+			burka.getObject()->setTexturee(burkaAnimation.animate(), true);
 		}
 
 		//Kamera Haraketleri

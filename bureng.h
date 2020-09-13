@@ -3,6 +3,34 @@
 #ifndef BURENG
 #define BURENG
 
+/*
+* 
+* 
+* GEREKLÝ #DEFINE
+* 
+* 
+*/
+
+#ifndef ANIMPERFRAME
+#error #define ANIMPERFRAME [Kac frame'de bir animasyon degisecegi] tanýmýný yapmak zorundasýn
+#endif
+
+//Bir dizide kaç tane UIELEMENT olduðunu belirtmemiz istenir.
+//Bu þekilde kütüphaneyi yapan deðil kütüphaneyi kullanan dizilerin kaç tane olduðunu belirtmiþ olur.
+#ifndef UIELEMENTS
+#error UIELEMENTS'i define edip bir sayý belirtmen gerekiyor.
+//Bu UIELEMENTS programýnda kaç tane UI element'i kullanacaðýný belirtir.
+#endif
+
+//Yukardakilerle benzer þeyler
+#ifndef MULTIS
+#error MultiDraw için MULTIlerin max kaç tane olmasýný istediðini giriniz. (define MULTIS)
+#endif
+
+#ifndef SUPERSTR
+#error SUPERSTR dizisinin kaç tane olduðu belirtilmeli #define SUPERSTR [dizisayisi]
+#endif
+
 #define TEXTURELOAD "Texture:" << urTexture->id << " yukleme durumu: " << urTexture->texture.loadFromFile(filePath)
 #define FONTLOAD "Font " << id << " Yukleme Durumu: " << font.loadFromFile("res/fonts/batmfo__.ttf")
 #define FONTERROR "Font " << id << " yuklenmesinde bir hata meydana geldi."
@@ -45,9 +73,26 @@
 #error id = animasyon idsi
 #endif
 
+/*
+*
+* 
+* DAHÝL EDÝLMESÝ GEREKENLER
+* 
+*
+*/
+
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <thread>
+
+
+/*
+*
+*
+* DEÐÝÞKENLER
+* 
+*
+*/
 
 /// <summary>
 /// 2 Bool veri tutan deðiþken
@@ -55,6 +100,11 @@
 struct tValBool {
 	bool b1, b2;
 };
+
+
+///Dir
+enum Dir { LEFT, RIGHT, UP, DOWN, NONE };
+
 
 /// <summary>
 /// Texturelar için özel deðiþken
@@ -80,21 +130,20 @@ struct valueXY {
 	float x, y;
 };
 
+/// <summary>
+/// Fizik verilerini tutan deðiþken (Þimdilik tek þey var ama daha çok þey ekleyecem)
+/// </summary>
+struct PhyVal {
+	float gravity;
+};
 
 /// <summary>
-/// Texturee deðiþkeni baþlatýcýsý
+/// Çarpýþma kontrolcüsü verilerini tutan deðiþken
 /// </summary>
-/// <param name="urTexture">Texturee deðiþkeninin adresi</param>
-/// <param name="width">Dosyanýn yatay pixel sayýsý</param>
-/// <param name="height">Dosyanýn dikey pixel sayýsý</param>
-/// <param name="id">Texture idsi</param>
-/// <param name="filePath">Dosya yolu</param>
-void setTexturee(Texturee* urTexture, int width, int height, std::string id, sf::String filePath) {
-	urTexture->width = width;
-	urTexture->height = height;
-	urTexture->id = id;
-	std::cout << std::endl << TEXTURELOAD;
-}
+struct Trigger {
+	float posX, posY, height, width;
+	std::string id;
+};
 
 /// <summary>
 /// Objelerin çarpýþmalarýndan sonra döndürülen deðer.
@@ -112,9 +161,7 @@ struct collideRes2 {
 	bool res1, res2;
 };
 
-#ifndef SUPERSTR
-#error SUPERSTR dizisinin kaç tane olduðu belirtilmeli #define SUPERSTR [dizisayisi]
-#else
+
 /// <summary>
 /// Ýçinde bir çok string deðeri barýndýran deðiþken
 /// </summary>
@@ -122,6 +169,31 @@ struct superStr {
 	std::string str[SUPERSTR];
 	int nextString = 0;
 };
+
+/*
+*
+*
+* FONKSIYONLAR
+*
+*
+*/
+
+/// <summary>
+/// Texturee deðiþkeni baþlatýcýsý
+/// </summary>
+/// <param name="urTexture">Texturee deðiþkeninin adresi</param>
+/// <param name="width">Dosyanýn yatay pixel sayýsý</param>
+/// <param name="height">Dosyanýn dikey pixel sayýsý</param>
+/// <param name="id">Texture idsi</param>
+/// <param name="filePath">Dosya yolu</param>
+void setTexturee(Texturee* urTexture, int width, int height, std::string id, sf::String filePath) {
+	urTexture->width = width;
+	urTexture->height = height;
+	urTexture->id = id;
+	std::cout << std::endl << TEXTURELOAD;
+}
+
+
 
 /// <summary>
 /// superStr deðiþkeni için bir baþlatýcý
@@ -166,7 +238,6 @@ void clearSTR(superStr* str) {
 		str->str[i] = "";
 	}
 }
-#endif
 
 /// <summary>
 /// Pencereni senin için hazýrlar
@@ -196,7 +267,13 @@ sf::Font setFont(sf::String filePath, std::string id) {
 	return font;
 }
 
-
+/*
+*
+*
+* SINIFLAR
+*
+*
+*/
 
 class gameObject {
 private:
@@ -280,8 +357,22 @@ public:
 		window->draw(sprite);
 	}
 
-	void setTexturee(Texturee txr) {
+	/// <summary>
+	/// Belirli yükseklik ve geniþliði sabit tutarak veya tutmayarak texture deðiþtirir.
+	/// </summary>
+	/// <param name="txr">Texturee</param>
+	/// <param name="math">sabit tutammý?</param>
+	void setTexturee(Texturee txr,bool math) {
 		texturee = txr;
+		if (!math) {
+			texturee = txr;
+		}
+		else {
+			float shouldX = scale.x * texturee.width;
+			float shouldY = scale.y * texturee.height;
+			scale.x = shouldX / txr.width;
+			scale.y = shouldY / txr.height;
+		}
 	}
 
 	/// <summary>
@@ -300,16 +391,7 @@ public:
 
 //FOR PHYSICS
 
-///Dir
-enum Dir { LEFT, RIGHT, UP, DOWN, NONE };
 
-/// <summary>
-/// Çarpýþma kontrolcüsü verilerini tutan deðiþken
-/// </summary>
-struct Trigger {
-	float posX, posY, height, width;
-	std::string id;
-};
 
 /// <summary>
 /// Çarpýþmayla alakalý olaylarý kontrol eden yapan sýnýf
@@ -346,12 +428,6 @@ public:
 	}
 }triggerClass;
 
-/// <summary>
-/// Fizik verilerini tutan deðiþken (Þimdilik tek þey var ama daha çok þey ekleyecem)
-/// </summary>
-struct PhyVal {
-	float gravity;
-};
 
 /// <summary>
 /// PhyVal deðiþkenini bizim için ayarlar
@@ -469,7 +545,6 @@ public:
 		fixStart();
 		std::cout << std::endl << CREATINGPHYOBJ;
 	}
-
 	/// <summary>
 	/// Objeyi çizer
 	/// </summary>
@@ -771,17 +846,13 @@ public:
 };
 #endif
 
-#ifndef ANIMPERFRAME
-#error #define ANIMPERFRAME [Kac frame'de bir animasyon degisecegi] tanýmýný yapmak zorundasýn
-#else
-
 /// <summary>
 /// Animasyon deðiþkeni.
 /// </summary>
 class Animation {
 private:
 	Texturee animTextures[ANIMPERFRAME];
-	int anim = 0 ,nextAnim = 0;
+	int anim = 0 ,nextAnim = 0, addedAnim = 0;
 	std::string animId;
 public:
 	/// <summary>
@@ -813,8 +884,8 @@ public:
 		else {
 			animTextures[nextAnim] = texture;
 			std::cout << std::endl << "ANIMASYON EKLENDI:" << animId << ":" << texture.id;
+			nextAnim++;
 		}
-		nextAnim++;
 	}
 
 	/// <summary>
@@ -826,11 +897,13 @@ public:
 		if (anim >= ANIMPERFRAME) {
 			anim = 0;
 		}
-		return animTextures[anim];
+		return animTextures[ anim / (ANIMPERFRAME / (nextAnim)) ];
+	}
+
+	void reset() {
+		anim = 0;
 	}
 };
-
-#endif
 
 
 /// <summary>
@@ -903,12 +976,6 @@ public:
 };
 
 
-//Bir dizide kaç tane UIELEMENT olduðunu belirtmemiz istenir.
-//Bu þekilde kütüphaneyi yapan deðil kütüphaneyi kullanan dizilerin kaç tane olduðunu belirtmiþ olur.
-#ifndef UIELEMENTS
-#error UIELEMENTS'i define edip bir sayý belirtmen gerekiyor.
-//Bu UIELEMENTS programýnda kaç tane UI element'i kullanacaðýný belirtir.
-#else
 /// <summary>
 /// UI CLASS UI objelerini oluþturmaya çizmeye ve kontrolü saðlar
 /// </summary>
@@ -963,12 +1030,8 @@ public:
 		}
 	}
 };
-#endif
 
-//Yukardakilerle benzer þeyler
-#ifndef MULTIS
-#error MultiDraw için MULTIlerin max kaç tane olmasýný istediðini giriniz. (define MULTIS)
-#else
+
 /// <summary>
 /// Çoklu obje çizimleri için sýnýf
 /// </summary>
@@ -1016,7 +1079,5 @@ public:
 	}
 
 };
-
-#endif
 
 #endif
