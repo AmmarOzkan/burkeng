@@ -3,12 +3,12 @@
 #include <string>
 
 
-#define UIELEMENTS 15
+#define UIELEMENTS 100
 #define TRIGGERCONTROL 50
 #define MULTIS 50
 #define DOUBLESTRINGN 50
 #define SUPERSTR 50
-#define ANIMPERFRAME 60
+#define ANIMPERFRAME 30
 
 #include "RENG/bureng.h"
 
@@ -59,6 +59,8 @@ int main()
 	setTexturee(&playerTexture, 512, 512, "PlayerTexture", "res/imgs/player.png");
 	Texturee playerIdleTexture;
 	setTexturee(&playerIdleTexture, 512, 512, "PlayerIdleTexture", "res/imgs/playerIdle.png");
+	Texturee menuBackgroundTexture;
+	setTexturee(&menuBackgroundTexture, 450, 318, "menuBackgorundTexture", "res/imgs/menu.jpg");
 
 
 	//Mouse
@@ -114,7 +116,17 @@ int main()
 	burkaAnimation.addAnimTexture(playerIdleTexture);
 	burkaAnimation.addAnimTexture(playerTexture);
 
-
+	//Menu
+	valueXY panelPos = { 25,25 }, panelWH = {750,550};
+	UI menuUI("res/fonts/batmfa__.ttf", "Basic Font", &window);
+	Panel menuPanel(panelPos,panelWH,menuBackgroundTexture, true,&menuUI,0, &window);
+	menuPanel.addButton(burkaTexture, "ExitMenu", 600, 460, 100, 50);
+	menuPanel.addText("Geç",0, 600, 460);
+	menuPanel.addText("MENU",1, 300, 0);
+	menuPanel.addText("Buton Aktifligini Kaldir", 2, 0, 50);
+	menuPanel.addText("Butonlari Aktiflestir", 3, 300, 50);
+	menuPanel.addButton(burkaTexture, "ButonActivateFalse", 0, 100, 300, 50);
+	menuPanel.addButton(burkaTexture, "ButonActivateTrue", 300, 100, 300, 50);
 
 	//Butonlar
 	Button jumpButton(mouseTexture,"JumpButton",0,500,100,100,&window);
@@ -168,6 +180,7 @@ int main()
 	bool superJumping = false;
 
 	int worldTurn = 0;
+	bool buttonActive = true;
 	while (window.isOpen())
 	{
 		if (super) mouse.setTexturee(aimTexture,true);
@@ -177,7 +190,21 @@ int main()
 			//Buton basýldý basýlmadý kontrolü
 			jumpButton.control(event);
 			replayButton.control(event);
-
+			int menuPanelButID = menuPanel.getClickId(event);
+			if (menuPanelButID != -1) {
+				std::cout << std::endl << "Panelde butona basýldý!!!" << menuPanelButID;
+			}
+			//PANELÝ KAPATMA
+			if (menuPanelButID == 0) {
+				menuPanel.setActivite(false);
+			}//PANELDEN BUTONLARI KAPATMA
+			else if (menuPanelButID == 1) {
+				buttonActive = false;
+			}
+			//PANELDEN BUTONLARI AÇMA
+			else if (menuPanelButID == 2) {
+				buttonActive = true;
+			}
 
 			if (event.type == sf::Event::Closed)
 				window.close();
@@ -214,6 +241,9 @@ int main()
 					break;
 				case sf::Keyboard::W:
 					superJumping = true;
+					break;
+				case sf::Keyboard::Escape:
+					menuPanel.setActivite(true);
 				}
 			}
 			else if (event.type == sf::Event::KeyReleased) {
@@ -245,12 +275,12 @@ int main()
 			}
 		}
 		///////Buton ile zýplama
-		if (jumpButton.getClick() && canJump) {
+		if (jumpButton.getClick() && canJump && buttonActive) {
 			burka.forceAdd(0.0, -40.0);
 			burka.setTrigger();
 			canJump = false;
 		}
-		if (replayButton.getClick()) {
+		if (replayButton.getClick() && buttonActive) {
 			burka.getObject()->position()->x = 0;
 			burka.getObject()->position()->y = 0;
 			burka.forceClear();
@@ -349,11 +379,14 @@ int main()
 		draw.draw();
 
 		//Buton
-		jumpButton.draw();
-		replayButton.draw();
+		if (buttonActive) {
+			jumpButton.draw();
+			replayButton.draw();
+		}
 
 		//UI
 		ui.draw();
+		menuPanel.draw();
 
 		mouse.draw();
 

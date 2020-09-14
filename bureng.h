@@ -1031,6 +1031,146 @@ public:
 	}
 };
 
+#define BUTTONARRAY 10
+
+/// <summary>
+/// Button arraylarýný tutacak olan deðiþken
+/// </summary>
+struct Buttons {
+	Button* buttons[BUTTONARRAY];
+	int nextButton = 0;
+};
+
+/// <summary>
+/// Bu deðiþkene eklenecek butonu otomatik olarak ayarlayacak olan fonksiyon
+/// </summary>
+/// <param name="urButtons">Butonun adresi</param>
+/// <param name="buttonTexture">Texture</param>
+/// <param name="id">string id</param>
+/// <param name="posX">pozisyon x</param>
+/// <param name="posY">pozisyon y</param>
+/// <param name="scaleX">istenen geniþlik</param>
+/// <param name="scaleY">istenen yükseklik</param>
+/// <param name="urWindow">pencerenin adresi</param>
+void addButtons(Buttons* urButtons, Texturee buttonTexture, std::string id, float posX, float posY, float scaleX, float scaleY, sf::RenderWindow* urWindow) {
+	if (urButtons->nextButton >= BUTTONARRAY) {
+		std::cout << std::endl << "MAX_BUTTON_ARRAY";
+	}
+	else {
+		urButtons->buttons[urButtons->nextButton] = new Button(buttonTexture, id, posX, posY, scaleX, scaleY, urWindow);
+		urButtons->nextButton++;
+	}
+}
+
+
+
+/// <summary>
+/// Panel Class
+/// </summary>
+class Panel {
+private:
+	valueXY pos, scale;
+	Texturee texture;
+	Buttons buttons;
+	int nextText;
+	bool isActive;
+	sf::RenderWindow* window;
+	sf::Font defaultFont;
+	UI *ui;
+
+public:
+
+	/// <summary>
+	/// Panel oluþturucu fonksiyonu
+	/// </summary>
+	/// <param name="position">valueXY deðerinden pozisyon</param>
+	/// <param name="widthHeight">valueXY deðerinden geniþlik ve yükseklik</param>
+	/// <param name="urTexture">texture</param>
+	/// <param name="isActiveController">baþlangýçta panel açýk?</param>
+	/// <param name="urUI">Panelde kullanýlacak UI objesi</param>
+	/// <param name="urWindow"></param>
+	Panel(valueXY position, valueXY widthHeight, Texturee urTexture, bool isActiveController, UI *urUI,sf::RenderWindow* urWindow)
+		: texture(urTexture), window(urWindow), ui(urUI)
+	{
+		buttons.nextButton = 0;
+		nextText = 0;
+		isActive = isActiveController;
+		scale.x = widthHeight.x / texture.width;
+		scale.y = widthHeight.y / texture.height;
+		pos = position;
+	}
+
+	/// <summary>
+	/// Buton ekleme fonksiyonu
+	/// </summary>
+	/// <param name="buttonTexture">texture</param>
+	/// <param name="id">id</param>
+	/// <param name="posX">panel üstünde pozisyon x. Eðer panel 100x pozisyonunda buton 20x pozisyonundaysa buton ekranda 120x pozisyonundadýr</param>
+	/// <param name="posY">ayný þekilde yukarýda</param>
+	/// <param name="scaleX">geniþlik</param>
+	/// <param name="scaleY">yükseklik</param>
+	void addButton(Texturee buttonTexture, std::string id, float posX, float posY, float scaleX, float scaleY) {
+		addButtons(&buttons, buttonTexture, id, posX + pos.x, posY + pos.y, scaleX, scaleY, window);
+	}
+
+	/// <summary>
+	/// text ekle
+	/// </summary>
+	/// <param name="string">yazý</param>
+	/// <param name="array">dizide kaçýncý sýrada olsun?</param>
+	/// <param name="posX">pozisyon x</param>
+	/// <param name="posY">pozisyon y</param>
+	/// <returns></returns>
+	bool addText(sf::String string,int array, float posX, float posY) {
+		if (array >= UIELEMENTS) {
+			std::cout << std::endl << "MAX_TEXT_ARRAY";
+			return false;
+		}
+		else {
+			ui->setText(array, string, posX+pos.x, posY+pos.y);
+			return true;
+		}
+	}
+
+	/// <summary>
+	/// Týklanan butonun idsini döndürür
+	/// </summary>
+	/// <param name="event">Event</param>
+	/// <returns>butonun idsi</returns>
+	int getClickId(sf::Event event) {
+		if (isActive) {
+			for (int i = 0; i < buttons.nextButton; i++) {
+				buttons.buttons[i]->control(event);
+				if (buttons.buttons[i]->getClick()) {
+					return i;
+				}
+			}
+		}
+		return -1;
+	}
+
+	/// <summary>
+	/// Aktifliðini deðiþtir
+	/// </summary>
+	/// <param name="a">aktif?</param>
+	void setActivite(bool a) {
+		isActive = a;
+	}
+
+	void draw() {
+		if (isActive) {
+			sf::Sprite sprite;
+			sprite.setTexture(texture.texture);
+			sprite.setScale(scale.x, scale.y);
+			sprite.setPosition(pos.x, pos.y);
+			window->draw(sprite);
+			for (int i = 0; i < buttons.nextButton; i++) {
+				buttons.buttons[i]->draw();
+			}
+			ui->draw();
+		}
+	}
+};
 
 /// <summary>
 /// Çoklu obje çizimleri için sýnýf
