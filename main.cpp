@@ -60,7 +60,10 @@ int main()
 	Texturee playerIdleTexture;
 	setTexturee(&playerIdleTexture, 512, 512, "PlayerIdleTexture", "res/imgs/playerIdle.png");
 	Texturee menuBackgroundTexture;
-	setTexturee(&menuBackgroundTexture, 450, 318, "menuBackgorundTexture", "res/imgs/menu.jpg");
+	setTexturee(&menuBackgroundTexture, 512, 512, "menuBackgorundTexture", "res/imgs/menu.png");
+	///FOR BUTTON
+	Texturee buttonTexture;
+	setTexturee(&buttonTexture, 16, 16, "buttonTexture", "res/imgs/buton.png");
 
 
 	//Mouse
@@ -120,14 +123,14 @@ int main()
 	valueXY panelPos = { 25,25 }, panelWH = {750,550};
 	UI menuUI("res/fonts/batmfa__.ttf", "Basic Font", &window);
 	Panel menuPanel(panelPos,panelWH,menuBackgroundTexture, true,&menuUI, &window);
-	menuPanel.setMove(750, 100);
+	menuPanel.setMove(750, 25);
 	menuPanel.addButton(burkaTexture, "ExitMenu", 600, 460, 100, 50);
 	menuPanel.addText("Geç",0, 600, 460);
 	menuPanel.addText("MENU",1, 300, 0);
-	menuPanel.addText("Buton Aktifligini Kaldir", 2, 0, 50);
-	menuPanel.addText("Butonlari Aktiflestir", 3, 300, 50);
-	menuPanel.addButton(burkaTexture, "ButonActivateFalse", 0, 100, 300, 50);
-	menuPanel.addButton(burkaTexture, "ButonActivateTrue", 300, 100, 300, 50);
+	menuPanel.addText("ButonGizle", 2, 60, 75);
+	menuPanel.addText("ButonGoster", 3, 350, 75);
+	menuPanel.addButton(buttonTexture, "ButonActivateFalse", 20, 100, 300, 50);
+	menuPanel.addButton(buttonTexture, "ButonActivateTrue", 370, 100, 300, 50);
 
 	//Butonlar
 	Button jumpButton(mouseTexture,"JumpButton",0,500,100,100,&window);

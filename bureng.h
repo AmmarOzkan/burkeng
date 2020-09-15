@@ -1128,7 +1128,7 @@ public:
 	/// </summary>
 	/// <param name="event">Pencere eventi</param>
 	void move(sf::Event event) {
-		if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && moveSetted) {
+		if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && moveSetted && isActive) {
 			Trigger panelTrigger;
 			panelTrigger.posX = pos.x; panelTrigger.posY = pos.y; panelTrigger.height = moveScale.y; panelTrigger.width = moveScale.x; panelTrigger.id = "panelTrigger";
 			Trigger mouseTrigger;
@@ -1137,7 +1137,7 @@ public:
 				isMoving = true;
 				mousePos.x = event.mouseButton.x; mousePos.y = event.mouseButton.y;
 			}
-		}if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left && moveSetted) {
+		}if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left && moveSetted && isActive) {
 			Trigger panelTrigger;
 			panelTrigger.posX = pos.x; panelTrigger.posY = pos.y; panelTrigger.height = moveScale.y; panelTrigger.width = moveScale.x; panelTrigger.id = "panelTrigger";
 			Trigger mouseTrigger;
@@ -1146,7 +1146,7 @@ public:
 				isMoving = false;
 				mousePos.x = event.mouseButton.x; mousePos.y = event.mouseButton.y;
 			}
-		}if (event.type == sf::Event::MouseMoved && isMoving == true) {
+		}if (event.type == sf::Event::MouseMoved && isMoving == true && isActive) {
 			pos.x = event.mouseMove.x - mousePos.x;
 			if (mousePos.y < 0) {
 				pos.y = event.mouseMove.y + mousePos.y;
