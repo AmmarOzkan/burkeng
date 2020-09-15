@@ -119,7 +119,8 @@ int main()
 	//Menu
 	valueXY panelPos = { 25,25 }, panelWH = {750,550};
 	UI menuUI("res/fonts/batmfa__.ttf", "Basic Font", &window);
-	Panel menuPanel(panelPos,panelWH,menuBackgroundTexture, true,&menuUI,0, &window);
+	Panel menuPanel(panelPos,panelWH,menuBackgroundTexture, true,&menuUI, &window);
+	menuPanel.setMove(750, 100);
 	menuPanel.addButton(burkaTexture, "ExitMenu", 600, 460, 100, 50);
 	menuPanel.addText("Geç",0, 600, 460);
 	menuPanel.addText("MENU",1, 300, 0);
@@ -131,6 +132,7 @@ int main()
 	//Butonlar
 	Button jumpButton(mouseTexture,"JumpButton",0,500,100,100,&window);
 	Button replayButton(replayTexture,"ReplayButton", 700, 0, 100, 100, &window);
+	Button menuButton(replayTexture, "MenuButton", 0, 0, 100, 100, &window);
 
 	//Çoklu çizim için triggerlar
 	MultiDraw draw;
@@ -190,10 +192,10 @@ int main()
 			//Buton basýldý basýlmadý kontrolü
 			jumpButton.control(event);
 			replayButton.control(event);
+			menuButton.control(event);
+			menuPanel.move(event);
+
 			int menuPanelButID = menuPanel.getClickId(event);
-			if (menuPanelButID != -1) {
-				std::cout << std::endl << "Panelde butona basýldý!!!" << menuPanelButID;
-			}
 			//PANELÝ KAPATMA
 			if (menuPanelButID == 0) {
 				menuPanel.setActivite(false);
@@ -289,6 +291,11 @@ int main()
 			coin.getObject()->position()->y = 100;
 			coin.setTrigger();
 		}
+
+		//Menu açma
+		if (menuButton.getClick()) {
+			menuPanel.setActivite(true);
+		}
 		
 
 		//Haraket iþlemleri
@@ -377,6 +384,8 @@ int main()
 		background.draw();
 		backgroundDraw.draw();
 		draw.draw();
+
+		menuButton.draw();
 
 		//Buton
 		if (buttonActive) {

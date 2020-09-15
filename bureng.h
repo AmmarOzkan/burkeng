@@ -756,6 +756,11 @@ public:
 		}
 	}
 
+	/// <summary>
+	/// Force ondan bundan yüksekmi
+	/// </summary>
+	/// <param name="x">Yüksek olmamasý gereken x ve düþük olmamasý gereken -x deðerindeki X</param>
+	/// <param name="y">Yüksek olmamasý gereken y ve düþük olmamasý gereken -y deðerindeki Y</param>
 	void forceControl(float x, float y) {
 		if (force.x > x) {
 			force.x = x;
@@ -952,10 +957,11 @@ public:
 	/// Butona basýlýp basýlmadýðýný kontrol etmeyi saðlar
 	/// </summary>
 	/// <param name="event">Pencere Eventi</param>
-	void control(sf::Event event) {
-		Trigger mouse;
-		triggerClass.setTrigger(&mouse, event.mouseButton.x, event.mouseButton.y, 0, 0, 1, 1);
-		bool fix = event.mouseButton.button == sf::Mouse::Left && triggerClass.isColliding(t, mouse);
+	bool control(sf::Event event) {
+		Trigger mouseTrigger;
+		mouseTrigger.posX = event.mouseButton.x; mouseTrigger.posY = event.mouseButton.y; mouseTrigger.height = 0; mouseTrigger.width = 0; mouseTrigger.id = "MOUSE TRIGGER";
+		triggerClass.setTrigger(&t, pos.x, pos.y, txr.height * scale.y, txr.width * scale.x, 1, 1);
+		bool fix = event.mouseButton.button == sf::Mouse::Left && triggerClass.isColliding(t, mouseTrigger);
 		bool b = event.type == sf::Event::MouseButtonPressed && fix;
 		bool c = event.type == sf::Event::MouseButtonReleased;
 		if (b) {
@@ -964,7 +970,10 @@ public:
 		else if (c) {
 			click = false;
 		}
+		return click;
 	}
+
+	valueXY * getPos(){return &pos;}
 
 	/// <summary>
 	/// Butona basýlýp basýlmadýðýný döndürür
@@ -1069,14 +1078,17 @@ void addButtons(Buttons* urButtons, Texturee buttonTexture, std::string id, floa
 /// </summary>
 class Panel {
 private:
-	valueXY pos, scale;
+	valueXY pos, scale, moveScale;
+
 	Texturee texture;
 	Buttons buttons;
 	int nextText;
-	bool isActive;
+	bool isActive,moveSetted;
+	bool isMoving;
 	sf::RenderWindow* window;
 	sf::Font defaultFont;
 	UI *ui;
+	valueXY mousePos;
 
 public:
 
@@ -1098,6 +1110,50 @@ public:
 		scale.x = widthHeight.x / texture.width;
 		scale.y = widthHeight.y / texture.height;
 		pos = position;
+		moveSetted = false; isMoving = false;
+	}
+
+	/// <summary>
+	/// Haraket sisteminin triggerýný ayarlamak için gereken fonksiyon
+	/// </summary>
+	/// <param name="scaleX">X geniþliði</param>
+	/// <param name="scaleY">Y geniþliði</param>
+	void setMove(float scaleX, float scaleY) {
+		moveScale.x = scaleX; moveScale.y = scaleY;
+		moveSetted = true;
+	}
+
+	/// <summary>
+	/// Panel haraket sisteminin haraketini kontrol eder.
+	/// </summary>
+	/// <param name="event">Pencere eventi</param>
+	void move(sf::Event event) {
+		if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && moveSetted) {
+			Trigger panelTrigger;
+			panelTrigger.posX = pos.x; panelTrigger.posY = pos.y; panelTrigger.height = moveScale.y; panelTrigger.width = moveScale.x; panelTrigger.id = "panelTrigger";
+			Trigger mouseTrigger;
+			mouseTrigger.posX = event.mouseButton.x; mouseTrigger.posY = event.mouseButton.y; mouseTrigger.height = 0; mouseTrigger.width = 0;
+			if (triggerClass.isColliding(panelTrigger, mouseTrigger)) {
+				isMoving = true;
+				mousePos.x = event.mouseButton.x; mousePos.y = event.mouseButton.y;
+			}
+		}if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left && moveSetted) {
+			Trigger panelTrigger;
+			panelTrigger.posX = pos.x; panelTrigger.posY = pos.y; panelTrigger.height = moveScale.y; panelTrigger.width = moveScale.x; panelTrigger.id = "panelTrigger";
+			Trigger mouseTrigger;
+			mouseTrigger.posX = event.mouseButton.x; mouseTrigger.posY = event.mouseButton.y; mouseTrigger.height = 0; mouseTrigger.width = 0;
+			if (isMoving) {
+				isMoving = false;
+				mousePos.x = event.mouseButton.x; mousePos.y = event.mouseButton.y;
+			}
+		}if (event.type == sf::Event::MouseMoved && isMoving == true) {
+			pos.x = event.mouseMove.x - mousePos.x;
+			if (mousePos.y < 0) {
+				pos.y = event.mouseMove.y + mousePos.y;
+			}else{
+				pos.y = event.mouseMove.y - mousePos.y;
+			}
+		}
 	}
 
 	/// <summary>
@@ -1110,7 +1166,7 @@ public:
 	/// <param name="scaleX">geniþlik</param>
 	/// <param name="scaleY">yükseklik</param>
 	void addButton(Texturee buttonTexture, std::string id, float posX, float posY, float scaleX, float scaleY) {
-		addButtons(&buttons, buttonTexture, id, posX + pos.x, posY + pos.y, scaleX, scaleY, window);
+		addButtons(&buttons, buttonTexture, id, posX, posY, scaleX, scaleY, window);
 	}
 
 	/// <summary>
@@ -1132,6 +1188,13 @@ public:
 		}
 	}
 
+	Button getButton(int array) {
+		Button button = buttons.buttons[array][0];
+		button.getPos()->x += pos.x;
+		button.getPos()->y += pos.y;
+		return button;
+	}
+
 	/// <summary>
 	/// Týklanan butonun idsini döndürür
 	/// </summary>
@@ -1140,8 +1203,8 @@ public:
 	int getClickId(sf::Event event) {
 		if (isActive) {
 			for (int i = 0; i < buttons.nextButton; i++) {
-				buttons.buttons[i]->control(event);
-				if (buttons.buttons[i]->getClick()) {
+				Button button = getButton(i);
+				if (button.control(event)) {
 					return i;
 				}
 			}
@@ -1157,6 +1220,9 @@ public:
 		isActive = a;
 	}
 
+	/// <summary>
+	/// Panel'i çizdirir
+	/// </summary>
 	void draw() {
 		if (isActive) {
 			sf::Sprite sprite;
@@ -1165,9 +1231,15 @@ public:
 			sprite.setPosition(pos.x, pos.y);
 			window->draw(sprite);
 			for (int i = 0; i < buttons.nextButton; i++) {
-				buttons.buttons[i]->draw();
+				getButton(i).draw();
 			}
-			ui->draw();
+			for (int i = 0; i < UIELEMENTS; i++) {
+				sf::Text text;
+				text.setFont(ui->getText(i)[0].getFont()[0]);
+				text.setString(ui->getText(i)[0].getString());
+				text.setPosition(ui->getText(i)->getPosition().x + pos.x, ui->getText(i)->getPosition().y + pos.y);
+				window->draw(text);
+			}
 		}
 	}
 };
