@@ -363,7 +363,6 @@ public:
 	/// <param name="txr">Texturee</param>
 	/// <param name="math">sabit tutammý?</param>
 	void setTexturee(Texturee txr,bool math) {
-		texturee = txr;
 		if (!math) {
 			texturee = txr;
 		}
@@ -372,6 +371,7 @@ public:
 			float shouldY = scale.y * texturee.height;
 			scale.x = shouldX / txr.width;
 			scale.y = shouldY / txr.height;
+			texturee = txr;
 		}
 	}
 
@@ -806,6 +806,7 @@ public:
 			forceAdd(0.0, val.gravity);
 		}
 		force.x /= 1.05;
+		force.x /= 1.05;
 		collideRes collideX = addX(force.x, perf, willControl);
 		collideRes collideY = addY(force.y, perf, willControl);
 		if (collideX.res) {
@@ -902,7 +903,7 @@ public:
 		if (anim >= ANIMPERFRAME) {
 			anim = 0;
 		}
-		return animTextures[ anim / (ANIMPERFRAME / (nextAnim)) ];
+		return animTextures[ anim / (ANIMPERFRAME / (nextAnim-1)) ];
 	}
 
 	void reset() {
@@ -1127,7 +1128,7 @@ public:
 	/// Panel haraket sisteminin haraketini kontrol eder.
 	/// </summary>
 	/// <param name="event">Pencere eventi</param>
-	void move(sf::Event event) {
+	bool move(sf::Event event) {
 		if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && moveSetted && isActive) {
 			Trigger panelTrigger;
 			panelTrigger.posX = pos.x; panelTrigger.posY = pos.y; panelTrigger.height = moveScale.y; panelTrigger.width = moveScale.x; panelTrigger.id = "panelTrigger";
@@ -1148,12 +1149,9 @@ public:
 			}
 		}if (event.type == sf::Event::MouseMoved && isMoving == true && isActive) {
 			pos.x = event.mouseMove.x - mousePos.x;
-			if (mousePos.y < 0) {
-				pos.y = event.mouseMove.y + mousePos.y;
-			}else{
-				pos.y = event.mouseMove.y - mousePos.y;
-			}
+			pos.y = event.mouseMove.y - mousePos.y;
 		}
+		return isMoving;
 	}
 
 	/// <summary>
