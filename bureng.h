@@ -143,6 +143,7 @@ struct PhyVal {
 struct Trigger {
 	float posX, posY, height, width;
 	std::string id;
+	std::string publicId;
 };
 
 /// <summary>
@@ -282,6 +283,7 @@ private:
 	Texturee texturee;
 	sf::RenderWindow* window;
 	bool scaleSetted, posSetted;
+	std::string objectId;
 public:
 	/// <summary>
 	/// Oyun objesinin pozisyonunu büyüklüðünü vs ayarlar. Hoj bir sýnýftýr.
@@ -311,6 +313,17 @@ public:
 		}
 		window = yourWindow;
 		camera = urCamera;
+
+		objectId = id;
+	}
+
+	std::string getId() {
+		return objectId;
+	}
+
+	void setHW(float width, float height) {
+		scale.x = width / texturee.width;
+		scale.y = height / texturee.height;
 	}
 	/// <summary>
 	/// Oyun objesinin pozisyonunu büyüklüðünü vs ayarlar. Hoj bir sýnýftýr.
@@ -386,6 +399,8 @@ public:
 		return &scale;
 	}Texturee* getTexturee() {
 		return &texturee;
+	}valueXY* getCamera() {
+		return camera;
 	}
 };
 
@@ -415,16 +430,20 @@ public:
 	/// </summary>
 	/// <param name="trigger">Trigger deðiþkeninin adresi</param>
 	/// <param name="urObject">Oyun objesi</param>
-	void setTrigger(Trigger* trigger, gameObject* urObject) {
+	void setTrigger(Trigger* trigger, gameObject* urObject, std::string publicId) {
 		trigger->posX = urObject->position()->x;
 		trigger->posY = urObject->position()->y;
 		trigger->height = urObject->getTexturee()->height * urObject->getScale()->y;
 		trigger->width = urObject->getTexturee()->width * urObject->getScale()->x;
+		trigger->id = urObject->getId();
+		trigger->publicId = publicId;
 	}
-	void setTrigger(Trigger* trigger, float x, float y, float height, float width, float scaleX, float scaleY) {
+	void setTrigger(Trigger* trigger, float x, float y, float height, float width, float scaleX, float scaleY, std::string id, std::string publicId) {
 		trigger->posX = x; trigger->posY = y;
 		trigger->height = height * scaleX;
 		trigger->width = width * scaleY;
+		trigger->id = id;
+		trigger->publicId = publicId;
 	}
 }triggerClass;
 
@@ -449,7 +468,6 @@ void setPhyVal(PhyVal* urVal, float gravity) {
 /// </summary>
 struct Triggers {
 	Trigger* trigger[TRIGGERCONTROL];
-	std::string* id[TRIGGERCONTROL];
 	int nextTrigger;
 };
 
@@ -466,13 +484,12 @@ void setTriggers(Triggers* urTriggers) {
 /// <param name="urTriggers">Deðiþkenin adresi</param>
 /// <param name="urTrigger">Eklenecek trigger'ýn adresi</param>
 /// <param name="id">Yazýsal id (Çarpýþmalarda neye çarpýp çarpmadýðýný kontrol etmeye yarýyor)</param>
-void addNewTrigger(Triggers* urTriggers, Trigger* urTrigger, std::string* id) {
+void addNewTrigger(Triggers* urTriggers, Trigger* urTrigger) {
 	if (urTriggers->nextTrigger == TRIGGERCONTROL) {
 		std::cout << std::endl << "maksimum triggers sayisina ersildi";
 	}
 	else {
 		urTriggers->trigger[urTriggers->nextTrigger] = urTrigger;
-		urTriggers->id[urTriggers->nextTrigger] = id;
 		urTriggers->nextTrigger++;
 	}
 }
@@ -497,22 +514,22 @@ public:
 	/// </summary>
 	/// <param name="urTrigger">Eklenecek trigger'ýn idsi</param>
 	/// <param name="id">Trigger'ýn yazýsal idsi</param>
-	void addControl(Trigger* urTrigger, std::string* id) {
-		addNewTrigger(&triggerControl, urTrigger, id);
+	void addControl(Trigger* urTrigger) {
+		addNewTrigger(&triggerControl, urTrigger);
 	}
 
 	/// <summary>
 	/// Kendi trigger'ýný gameObjecte göre ayarlar.
 	/// </summary>
-	void setTrigger() {
-		triggerClass.setTrigger(&trigger, object);
+	void setTrigger(std::string publicId) {
+		triggerClass.setTrigger(&trigger, object,publicId);
 	}
 	/// <summary>
 	/// Physics Object oluþturulurken kullandýðým hep olan bir start fonksiyonu. Kullanýcýnýn kullanmasýna gerek yok.
 	/// </summary>
-	void fixStart() {
+	void fixStart(std::string publicId) {
 		setTriggers(&triggerControl);
-		setTrigger();
+		setTrigger(publicId);
 		force.x = 0;
 		force.y = 0;
 		startSS(&collided);
@@ -525,10 +542,10 @@ public:
 	/// <param name="physicsIsActive">fiziði olucakmý olmayacakmý (sonradan deðiþtirilebilir)</param>
 	/// <param name="gravity">yerçekimi</param>
 	/// <param name="id">oluþturulurken komut satýrýnda kontorl için yazýcak olan id</param>
-	physicsObject(gameObject* urObject, bool physicsIsActive, float gravity, std::string id)
+	physicsObject(gameObject* urObject, bool physicsIsActive, float gravity, std::string id, std::string publicId)
 		: object(urObject), physicsActive(physicsIsActive)
 	{
-		fixStart();
+		fixStart(publicId);
 		setPhyVal(&val, gravity);
 		std::cout << std::endl << CREATINGPHYOBJ;
 	}
@@ -539,10 +556,10 @@ public:
 	/// <param name="physicsIsActive">fiziði olucakmý olmayacakmý (sonradan deðiþtirilebilir)</param>
 	/// <param name="urVal">Fizik deðiþkeni varsa yerçekimi verisi vs girmek yerine bu girilir</param>
 	/// <param name="id">oluþturulurken komut satýrýnda kontorl için yazýcak olan id</param>
-	physicsObject(gameObject* urObject, bool physicsIsActive, PhyVal urVal, std::string id)
+	physicsObject(gameObject* urObject, bool physicsIsActive, PhyVal urVal, std::string id, std::string publicId)
 		: object(urObject), val(urVal), physicsActive(physicsIsActive)
 	{
-		fixStart();
+		fixStart(publicId);
 		std::cout << std::endl << CREATINGPHYOBJ;
 	}
 	/// <summary>
@@ -581,8 +598,8 @@ public:
 	void setColliding() {
 		for (int i = 0; i < triggerControl.nextTrigger; i++) {
 			if (triggerClass.isColliding(triggerControl.trigger[i][0], trigger)) {
-				if (!isThereAnySTR(collided, triggerControl.id[i][0])) {
-					addString(&collided, triggerControl.id[i][0]);
+				if (!isThereAnySTR(collided, triggerControl.trigger[i][0].publicId)) {
+					addString(&collided, triggerControl.trigger[i][0].publicId);
 				}
 			}
 		}
@@ -597,9 +614,9 @@ public:
 	collideRes isColliding(Trigger oObject, std::string willControl) {
 		collideRes res = { "",false };
 		for (int i = 0; i < triggerControl.nextTrigger; i++) {
-			if (triggerClass.isColliding(triggerControl.trigger[i][0], oObject) && ((triggerControl.id[i][0] == willControl) != (willControl == ""))) {
+			if (triggerClass.isColliding(triggerControl.trigger[i][0], oObject) && ((triggerControl.trigger[i][0].publicId == willControl) != (willControl == ""))) {
 				res.res = true;
-				res.id = triggerControl.id[i][0];
+				res.id = triggerControl.trigger[i][0].id;
 				if (!isThereAnySTR(collided, res.id)) {
 					addString(&collided, res.id);
 				}
@@ -617,6 +634,10 @@ public:
 		startSS(&collided);
 		clearSTR(&collided);
 		return res;
+	}
+
+	PhyVal * getPhysics() {
+		return &val;
 	}
 
 	/// <summary>
@@ -637,7 +658,7 @@ public:
 	bool control(std::string willControl) {
 		bool control = false;
 		for (int i = 0; i < triggerControl.nextTrigger; i++) {
-			if (isColliding(triggerControl.trigger[i][0]) && triggerControl.id[i][0] == willControl || willControl == "") {
+			if (isColliding(triggerControl.trigger[i][0]) && triggerControl.trigger[i][0].publicId == willControl || willControl == "") {
 				control = true;
 			}
 		}
@@ -659,7 +680,7 @@ public:
 		if (w > 0) {
 			for (float i = 0.0; i < w; i += perf) {
 				Trigger preTrigger;
-				triggerClass.setTrigger(&preTrigger, object);
+				triggerClass.setTrigger(&preTrigger, object,"");
 				preTrigger.posX += perf;
 				collideRes colliding = isColliding(preTrigger, willControl);
 				if (colliding.res) {
@@ -676,7 +697,7 @@ public:
 		else if (w < 0) {
 			for (float i = 0.0; i > w; i -= perf) {
 				Trigger preTrigger;
-				triggerClass.setTrigger(&preTrigger, object);
+				triggerClass.setTrigger(&preTrigger, object,"");
 				preTrigger.posX -= perf;
 				collideRes colliding = isColliding(preTrigger, willControl);
 				if (colliding.res) {
@@ -707,7 +728,7 @@ public:
 		if (w > 0) {
 			for (float i = 0.0; i < w; i += perf) {
 				Trigger preTrigger;
-				triggerClass.setTrigger(&preTrigger, object);
+				triggerClass.setTrigger(&preTrigger, object, "");
 				preTrigger.posY += perf;
 				collideRes colliding = isColliding(preTrigger, willControl);
 				if (colliding.res) {
@@ -724,7 +745,7 @@ public:
 		else if (w < 0) {
 			for (float i = 0.0; i > w; i -= perf) {
 				Trigger preTrigger;
-				triggerClass.setTrigger(&preTrigger, object);
+				triggerClass.setTrigger(&preTrigger, object, "");
 				preTrigger.posY -= perf;
 				collideRes colliding = isColliding(preTrigger, willControl);
 				if (colliding.res) {
@@ -938,7 +959,7 @@ public:
 		pos.x = x; pos.y = y;
 		scale.x = width / txr.width;
 		scale.y = height / txr.height;
-		triggerClass.setTrigger(&t, pos.x, pos.y, txr.height*scale.y, txr.width*scale.x, 1, 1);
+		triggerClass.setTrigger(&t, pos.x, pos.y, txr.height*scale.y, txr.width*scale.x, 1, 1,id,"button");
 	}
 
 	/// <summary>
@@ -961,7 +982,7 @@ public:
 	bool control(sf::Event event) {
 		Trigger mouseTrigger;
 		mouseTrigger.posX = event.mouseButton.x; mouseTrigger.posY = event.mouseButton.y; mouseTrigger.height = 0; mouseTrigger.width = 0; mouseTrigger.id = "MOUSE TRIGGER";
-		triggerClass.setTrigger(&t, pos.x, pos.y, txr.height * scale.y, txr.width * scale.x, 1, 1);
+		triggerClass.setTrigger(&t, pos.x, pos.y, txr.height * scale.y, txr.width * scale.x, 1, 1, "mouse","mouse");
 		bool fix = event.mouseButton.button == sf::Mouse::Left && triggerClass.isColliding(t, mouseTrigger);
 		bool b = event.type == sf::Event::MouseButtonPressed && fix;
 		bool c = event.type == sf::Event::MouseButtonReleased;
