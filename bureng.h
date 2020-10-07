@@ -86,6 +86,7 @@
 #include <SFML/Audio.hpp>
 #include <iostream>
 #include <thread>
+#include <fstream>
 
 
 /*
@@ -189,14 +190,66 @@ struct superStr {
 /// <param name="height">Dosyanýn dikey pixel sayýsý</param>
 /// <param name="id">Texture idsi</param>
 /// <param name="filePath">Dosya yolu</param>
-void setTexturee(Texturee* urTexture, int width, int height, std::string id, sf::String filePath) {
-	urTexture->width = width;
-	urTexture->height = height;
-	urTexture->id = id;
-	bool val = urTexture->texture.loadFromFile(filePath);
+Texturee setTexturee(int width, int height, std::string id, sf::String filePath) {
+	Texturee urTexture;
+	urTexture.width = width;
+	urTexture.height = height;
+	urTexture.id = id;
+	bool val = urTexture.texture.loadFromFile(filePath);
 #ifndef NODEBUG
 	std::cout << std::endl << TEXTURELOAD;
 #endif
+	return urTexture;
+}
+
+Texturee setTexturee(int width, int height, std::string id, sf::Image img) {
+	Texturee urTexture;
+	urTexture.width = width;
+	urTexture.height = height;
+	urTexture.id = id;
+	bool val = urTexture.texture.loadFromImage(img);
+#ifndef NODEBUG
+	std::cout << std::endl << TEXTURELOAD;
+#endif
+	return urTexture;
+}
+
+Texturee setTexturee(int width, int height, std::string id, sf::Texture texture) {
+	Texturee urTexture;
+	urTexture.width = width;
+	urTexture.height = height;
+	urTexture.id = id;
+	urTexture.texture = texture;
+	return urTexture;
+}
+
+sf::Texture loadImage(std::string path, int a) {
+	sf::Image img;
+	sf::Color red(100, 0, 0);
+	sf::Color blue(0, 100, 0);
+	sf::Color green(0, 0, 100);
+	std::ifstream file(path);
+	img.create(8, 8, sf::Color::Transparent);
+	for (int i = 0; i < a; i++) {
+		std::string t;
+		file >> t; char c;
+		file.get(c);
+	}
+	if (file.is_open()) {
+		for (int yPx = 0; yPx < 8; yPx++) {
+			for (int xPx = 0; xPx < 8; xPx++) {
+				char c; file.get(c); sf::Color color = sf::Color::Black;
+				if (c == '0') color = red;
+				else if (c == '1') color = blue;
+				else if (c == '2') color = green;
+				else if (c == '-') color = sf::Color::Transparent;
+				img.setPixel(xPx, yPx, color);
+			}
+		}
+	}
+	sf::Texture tx;
+	tx.loadFromImage(img);
+	return tx;
 }
 
 
@@ -363,8 +416,7 @@ public:
 	/// Objeyi ekrana çizer
 	/// </summary>
 	void draw() {
-		sf::Sprite sprite;
-		sprite.setTexture(texturee.texture);
+		sf::Sprite sprite(texturee.texture);
 		if (scaleSetted) {
 			sprite.setScale(scale.x, scale.y);
 		}if (posSetted) {
