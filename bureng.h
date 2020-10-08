@@ -229,10 +229,10 @@ struct colorByChar {
 	int r, g, b;
 };
 
-sf::Texture loadImage(std::string path, int a) {
+sf::Texture loadImage(std::string path, int a, int bit) {
 	sf::Image img;
 	std::ifstream file(path);
-	img.create(8, 8, sf::Color::Transparent);
+	img.create(bit, bit, sf::Color::Transparent);
 	colorByChar colors[20];
 	for (int i = 0; i < 20; i++) {
 		std::string command;
@@ -253,8 +253,8 @@ sf::Texture loadImage(std::string path, int a) {
 	}
 	file.get();
 	if (file.is_open()) {
-		for (int yPx = 0; yPx < 8; yPx++) {
-			for (int xPx = 0; xPx < 8; xPx++) {
+		for (int yPx = 0; yPx < bit; yPx++) {
+			for (int xPx = 0; xPx < bit; xPx++) {
 				char c; file.get(c); sf::Color color = sf::Color::Transparent;
 				for (int i = 0; i < 20; i++) {
 					if (c == colors[i].ch) { color = sf::Color::Color(colors[i].r, colors[i].g, colors[i].b); break; }
@@ -1013,7 +1013,7 @@ public:
 		if (anim >= ANIMPERFRAME) {
 			anim = 0;
 		}
-		return animTextures[anim / (ANIMPERFRAME / (nextAnim - 1))];
+		return animTextures[anim / (ANIMPERFRAME / (nextAnim))];
 	}
 
 	void reset() {
