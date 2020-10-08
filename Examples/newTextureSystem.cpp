@@ -18,7 +18,7 @@
 #include "RENG/bureng.h"
 #include "monsterlib.h"
 
-#define WIDTH 1200
+#define WIDTH 900
 #define HEIGHT 900
 #define PROPORTION 10
 
@@ -33,34 +33,61 @@ int main()
 	setWindow(window, 60);
 
 	valueXY camera = { 0,0 };
-	valueXY non = { 0,0 };
-	Texturee cursorTexture = setTexturee(330, 418, "CursorTexture", "res/flappybird/mouse.png");
-
-	gameObject cursor(cursorTexture, 0, 0, WIDTH * 0.5 / PROPORTION, WIDTH * 0.5 / PROPORTION, true, &window, &non);
-
-	Texturee anim1 = setTexturee(8, 8, "test", loadImage("data/testchar.mg",0));
-	Texturee anim2 = setTexturee(8, 8, "test", loadImage("data/testchar.mg", 1));
-	gameObject testObj(anim1, 100, 100, 100, 100, true, &window, &non);
-
-	Animation anim("testAnimation");
-	anim.addAnimTexture(anim1);
-	anim.addAnimTexture(anim2);
-	anim.addAnimTexture(anim2);
+	sf::Image img;
+	char fileChar[8][8];
+	img.create(8, 8, sf::Color::Transparent);
+	for (int x = 0; x < 8; x++) {
+		for (int y = 0; y < 8; y++) {
+			fileChar[x][y] = '-';
+			img.setPixel(x, y, sf::Color::Transparent);
+		}
+	}
+	sf::Texture txtr;
+	txtr.loadFromImage(img);
 	while (window.isOpen()) {
 
 		sf::Event event;
 		while (window.pollEvent(event)) {
-			if (event.type == sf::Event::MouseMoved) {
-				cursor.position()->x = event.mouseMove.x;
-				cursor.position()->y = event.mouseMove.y;
+		}
+		window.clear(sf::Color::Black);
+		std::string cmd;
+		int posX, posY;
+		std::string color;
+		std::cout << "posX posY color" << std::endl;
+		std::cin >> cmd;
+		if (cmd == "input") {
+			std::cin >> posX >> posY >> color;
+			sf::Color col = sf::Color::Transparent;
+			char c = '-';
+			if (color == "red") { col = sf::Color::Red; c = '1'; }
+			else if (color == "blue") { col = sf::Color::Blue; c = '2'; }
+			else if (color == "green") { col = sf::Color::Green; c = '3'; }
+			img.setPixel(posX, posY, col);
+			fileChar[posX][posY] = c;
+		}
+		else if (cmd == "addtofile") {
+			std::cin >> cmd;
+			std::ofstream file(cmd, std::ios::app);
+			if (file) {
+				for (int y = 0; y < 8; y++) {
+					for (int x = 0; x < 8; x++) {
+						file << fileChar[x][y];
+					}
+				}
+				file << std::endl;
 			}
 		}
-		testObj.setTexturee(anim.animate(), true);
-		window.clear(sf::Color::Black);
+		for (int y = 0; y < 8; y++) {
+			for (int x = 0; x < 8; x++) {
+				std::cout << fileChar[x][y];
+			}
+			std::cout << std::endl;
+		}
 
-		testObj.draw();
-		cursor.draw();
-
+		std::cout << txtr.loadFromImage(img) << std::endl;
+		Texturee t = setTexturee(8, 8, "d", txtr);
+		gameObject gm(t, 0, 0, 900, 900, true, &window, &camera);
+		gm.draw();
 		window.display();
 	}
 
