@@ -25,15 +25,83 @@
 #define PERFORMANCE 1.0
 
 #include <sstream>
-int main(int argv, char *argc[])
+int main(int argv, char* argc[])
 {
 	int bit = 4;
 	std::string filePath = "file.mg";
-	if (argv == 2) filePath = argc[1];
+	if (argv == 2) {
+		std::cout << "BIT" << std::endl;
+		filePath = argc[1];
+		std::cin >> bit;
+	}
 	else if (argv == 3) {
-		filePath = argc[1]; 
+		filePath = argc[1];
 		std::stringstream s(argc[2]);
 		s >> bit;
+	}
+	else {
+		std::cout << "BIT FILEPATH" << std::endl;
+		std::cin >> bit;
+		std::cin >> filePath;
+	}
+
+	sf::Image img;
+	char fileChar[256][256];
+	img.create(bit, bit, sf::Color::Transparent);
+	for (int x = 0; x < bit; x++) {
+		for (int y = 0; y < bit; y++) {
+			fileChar[x][y] = '-';
+			img.setPixel(x, y, sf::Color::Transparent);
+		}
+	}
+
+	while (true) {
+		std::string command;
+		std::cin >> command;
+		if (command == "start") break;
+		else if (command == "loaded") {
+			for (int y = 0; y < bit; y++) {
+				for (int x = 0; x < bit; x++) {
+					std::cout << fileChar[x][y];
+				}std::cout << std::endl;
+			}
+		}
+		else if (command == "load") {
+			int a;
+			std::cin >> command >> a;
+			std::ifstream file(command);
+			while(true){
+				std::string command;
+				file >> command;
+				if (command == "spr") {
+					break;
+				}
+			}
+			for (int i = 0; i < a; i++) {
+				std::string t;
+				file >> t; char c;
+				file.get(c);
+			}
+			file.get();
+			if (file.is_open()) {
+				for (int y = 0; y < bit; y++) {
+					for (int x = 0; x < bit; x++) {
+						char c; file.get(c);
+						if (c == '1') { img.setPixel(x, y, sf::Color::Red); }
+						else if (c == '2') { img.setPixel(x, y, sf::Color::Blue); }
+						else if (c == '3') { img.setPixel(x, y, sf::Color::Green); }
+						else if (c == '4') { img.setPixel(x, y, sf::Color::Yellow); }
+						else if (c == '5') { img.setPixel(x, y, sf::Color::Magenta); }
+						else if (c == '-') { img.setPixel(x, y, sf::Color::Transparent); }
+						else if (c == '*') { img.setPixel(x, y, sf::Color::Color(100, 100, 100)); }
+						else if (c == '+') { img.setPixel(x, y, sf::Color::Color(255, 255, 255)); }
+						fileChar[x][y] = c;
+					}
+				}
+			}
+		}
+
+		std::cout << std::endl;
 	}
 
 
@@ -44,19 +112,11 @@ int main(int argv, char *argc[])
 	valueXY camera = { 0,0 };
 	valueXY non = { 0,0 };
 
-	sf::Image img;
-	char fileChar[64][64];
-	img.create(bit, bit, sf::Color::Transparent);
-	for (int x = 0; x < bit; x++) {
-		for (int y = 0; y < bit; y++) {
-			fileChar[x][y] = '-';
-			img.setPixel(x, y, sf::Color::Transparent);
-		}
-	}
+	
 	sf::Texture txtr;
 	txtr.loadFromImage(img);
 	Texturee cursorTexture = setTexturee(100, 100, "cursor", txtr);
-	gameObject cursor(cursorTexture, 0, 0, 100, 100, true, &window, &camera);
+	gameObject cursor(cursorTexture, 0, 0, 25, 25, true, &window, &camera);
 	int color = 1;
 	while (window.isOpen()) {
 
@@ -111,8 +171,8 @@ int main(int argv, char *argc[])
 				}
 			}
 			else if (event.type == sf::Event::MouseButtonPressed) {
-				int x = event.mouseButton.x / (WIDTH/bit);
-				int y = event.mouseButton.y / (HEIGHT/bit);
+				int x = event.mouseButton.x / (WIDTH / bit);
+				int y = event.mouseButton.y / (HEIGHT / bit);
 				std::cout << x << " " << y << std::endl;
 				if (color == 1) { img.setPixel(x, y, sf::Color::Red); fileChar[x][y] = '1'; }
 				else if (color == 2) { img.setPixel(x, y, sf::Color::Blue); fileChar[x][y] = '2'; }
