@@ -94,7 +94,8 @@
 #include "bureng_functions.h"
 
 #include "bureng_main.h"
-
+#include "bureng_physics.h"
+#include "bureng_triggers.h"
 #include "bureng_extensions.h"
 
 

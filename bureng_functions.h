@@ -19,22 +19,22 @@
 /// <param name="height">Dosyanýn dikey pixel sayýsý</param>
 /// <param name="id">Texture idsi</param>
 /// <param name="filePath">Dosya yolu</param>
-Texturee setTexturee(int width, int height, std::string id, sf::String filePath) {
+Texturee setTexturee(std::string id, sf::String filePath) {
 	Texturee urTexture;
-	urTexture.width = width;
-	urTexture.height = height;
-	urTexture.id = id;
 	bool val = urTexture.texture.loadFromFile(filePath);
+	urTexture.width = urTexture.texture.getSize().x;
+	urTexture.height = urTexture.texture.getSize().y;
+	urTexture.id = id;
 #ifndef NODEBUG
 	std::cout << std::endl << TEXTURELOAD;
 #endif
 	return urTexture;
 }
 
-Texturee setTexturee(int width, int height, std::string id, sf::Image img) {
+Texturee setTexturee(std::string id, sf::Image img) {
 	Texturee urTexture;
-	urTexture.width = width;
-	urTexture.height = height;
+	urTexture.width = img.getSize().x;
+	urTexture.height = img.getSize().y;
 	urTexture.id = id;
 	bool val = urTexture.texture.loadFromImage(img);
 #ifndef NODEBUG
@@ -43,10 +43,10 @@ Texturee setTexturee(int width, int height, std::string id, sf::Image img) {
 	return urTexture;
 }
 
-Texturee setTexturee(int width, int height, std::string id, sf::Texture texture) {
+Texturee setTexturee(std::string id, sf::Texture texture) {
 	Texturee urTexture;
-	urTexture.width = width;
-	urTexture.height = height;
+	urTexture.width = texture.getSize().x;
+	urTexture.height = texture.getSize().y;
 	urTexture.id = id;
 	urTexture.texture = texture;
 	return urTexture;
@@ -152,6 +152,12 @@ void setWindow(sf::RenderWindow& window, int frameRate) {
 	window.setMouseCursorVisible(false);
 }
 
+void setWindow(sf::RenderWindow& window, int frameRate,bool mouseVisible) {
+	window.setActive(true);
+	window.setFramerateLimit(frameRate);
+	window.setMouseCursorVisible(mouseVisible);
+}
+
 /// <summary>
 /// Fontu ayarlar ve font ayarlanýp ayarlanamadýðýný komut penceresine yazdýrýr.
 /// Eðer bir hata meydana geldiyse bunu komut penceresinde yazdýrýr.
@@ -174,4 +180,7 @@ sf::Font setFont(sf::String filePath, std::string id) {
 #endif
 	return font;
 }
+
+
+
 #endif

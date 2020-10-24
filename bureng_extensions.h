@@ -1,6 +1,7 @@
 #pragma once
 #include "bureng_variables.h"
 #include "bureng_functions.h"
+#include "bureng_triggers.h"
 
 #ifndef BURENG_EXTENSIONS
 #define BURENG_EXTENSIONS
@@ -78,8 +79,8 @@ public:
 class Button {
 private:
 	Texturee txr;
-	valueXY pos;
-	valueXY scale;
+	Vector2 pos;
+	Vector2 scale;
 	sf::RenderWindow* window;
 	Trigger t;
 	bool click = false, holdButton;
@@ -98,7 +99,7 @@ public:
 		pos.x = x; pos.y = y;
 		scale.x = width / txr.width;
 		scale.y = height / txr.height;
-		triggerClass.setTrigger(&t, pos.x, pos.y, txr.height * scale.y, txr.width * scale.x, 1, 1, id, "button");
+		setTrigger(&t, pos.x, pos.y, txr.height * scale.y, txr.width * scale.x, 1, 1, id, "button");
 		holdButton = holdButtonn;
 	}
 
@@ -121,9 +122,9 @@ public:
 	/// <param name="event">Pencere Eventi</param>
 	bool control(sf::Event event) {
 		Trigger mouseTrigger;
-		mouseTrigger.posX = event.mouseButton.x; mouseTrigger.posY = event.mouseButton.y; mouseTrigger.height = 0; mouseTrigger.width = 0; mouseTrigger.id = "MOUSE TRIGGER";
-		triggerClass.setTrigger(&t, pos.x, pos.y, txr.height * scale.y, txr.width * scale.x, 1, 1, "mouse", "mouse");
-		bool fix = event.mouseButton.button == sf::Mouse::Left && triggerClass.isColliding(t, mouseTrigger);
+		mouseTrigger.pos.x = event.mouseButton.x; mouseTrigger.pos.y = event.mouseButton.y; mouseTrigger.scale.y = 0; mouseTrigger.scale.x = 0; mouseTrigger.id = "MOUSE TRIGGER";
+		setTrigger(&t, pos.x, pos.y, txr.height * scale.y, txr.width * scale.x, 1, 1, "mouse", "mouse");
+		bool fix = event.mouseButton.button == sf::Mouse::Left && isColliding(t, mouseTrigger);
 		bool b = event.type == sf::Event::MouseButtonPressed && fix;
 		bool c = event.type == sf::Event::MouseButtonReleased;
 		if (b && holdButton) {
@@ -140,7 +141,7 @@ public:
 		return click;
 	}
 
-	valueXY* getPos() { return &pos; }
+	Vector2* getPos() { return &pos; }
 
 	/// <summary>
 	/// Butona basýlýp basýlmadýðýný döndürür
@@ -249,7 +250,7 @@ void addButtons(Buttons* urButtons, Texturee buttonTexture, std::string id, floa
 /// </summary>
 class Panel {
 private:
-	valueXY pos, scale, moveScale;
+	Vector2 pos, scale, moveScale;
 
 	Texturee texture;
 	Buttons buttons;
@@ -259,20 +260,20 @@ private:
 	sf::RenderWindow* window;
 	sf::Font defaultFont;
 	UI* ui;
-	valueXY mousePos;
+	Vector2 mousePos;
 
 public:
 
 	/// <summary>
 	/// Panel oluþturucu fonksiyonu
 	/// </summary>
-	/// <param name="position">valueXY deðerinden pozisyon</param>
-	/// <param name="widthHeight">valueXY deðerinden geniþlik ve yükseklik</param>
+	/// <param name="position">Vector2 deðerinden pozisyon</param>
+	/// <param name="widthHeight">Vector2 deðerinden geniþlik ve yükseklik</param>
 	/// <param name="urTexture">texture</param>
 	/// <param name="isActiveController">baþlangýçta panel açýk?</param>
 	/// <param name="urUI">Panelde kullanýlacak UI objesi</param>
 	/// <param name="urWindow"></param>
-	Panel(valueXY position, valueXY widthHeight, Texturee urTexture, bool isActiveController, UI* urUI, sf::RenderWindow* urWindow)
+	Panel(Vector2 position, Vector2 widthHeight, Texturee urTexture, bool isActiveController, UI* urUI, sf::RenderWindow* urWindow)
 		: texture(urTexture), window(urWindow), ui(urUI)
 	{
 		buttons.nextButton = 0;
@@ -301,18 +302,18 @@ public:
 	bool move(sf::Event event) {
 		if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && moveSetted && isActive) {
 			Trigger panelTrigger;
-			panelTrigger.posX = pos.x; panelTrigger.posY = pos.y; panelTrigger.height = moveScale.y; panelTrigger.width = moveScale.x; panelTrigger.id = "panelTrigger";
+			panelTrigger.pos.x = pos.x; panelTrigger.pos.y = pos.y; panelTrigger.scale.y = moveScale.y; panelTrigger.scale.x = moveScale.x;
 			Trigger mouseTrigger;
-			mouseTrigger.posX = event.mouseButton.x; mouseTrigger.posY = event.mouseButton.y; mouseTrigger.height = 0; mouseTrigger.width = 0;
-			if (triggerClass.isColliding(panelTrigger, mouseTrigger)) {
+			mouseTrigger.pos.x = event.mouseButton.x; mouseTrigger.pos.y = event.mouseButton.y; mouseTrigger.scale.y= 0; mouseTrigger.scale.x = 0;
+			if (isColliding(panelTrigger, mouseTrigger)) {
 				isMoving = true;
 				mousePos.x = event.mouseButton.x; mousePos.y = event.mouseButton.y;
 			}
 		}if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left && moveSetted && isActive) {
 			Trigger panelTrigger;
-			panelTrigger.posX = pos.x; panelTrigger.posY = pos.y; panelTrigger.height = moveScale.y; panelTrigger.width = moveScale.x; panelTrigger.id = "panelTrigger";
+			panelTrigger.pos.x = pos.x; panelTrigger.pos.y = pos.y; panelTrigger.scale.y = moveScale.y; panelTrigger.scale.x = moveScale.x;
 			Trigger mouseTrigger;
-			mouseTrigger.posX = event.mouseButton.x; mouseTrigger.posY = event.mouseButton.y; mouseTrigger.height = 0; mouseTrigger.width = 0;
+			mouseTrigger.pos.x = event.mouseButton.x; mouseTrigger.pos.y = event.mouseButton.y; mouseTrigger.scale.y = 0; mouseTrigger.scale.x = 0;
 			if (isMoving) {
 				isMoving = false;
 				mousePos.x = event.mouseButton.x; mousePos.y = event.mouseButton.y;
@@ -422,7 +423,6 @@ public:
 /// </summary>
 class MultiDraw {
 private:
-	physicsObject* objects[MULTIS];
 	gameObject* gmObjects[MULTIS];
 	int nextMulti = 0;
 	int nextGmObject = 0;
@@ -431,17 +431,6 @@ public:
 	/// Çizilecek þeylere bir physicsObject atar
 	/// </summary>
 	/// <param name="object">Fizik Objesi</param>
-	void addObject(physicsObject* object) {
-		if (nextMulti == MULTIS) {
-#ifndef NODEBUG
-			std::cout << std::endl << "Maksimum MULTIS";
-#endif
-		}
-		else {
-			objects[nextMulti] = object;
-			nextMulti++;
-		}
-	}
 
 	void addObject(gameObject* object) {
 		if (nextGmObject == MULTIS) {
@@ -459,9 +448,6 @@ public:
 	/// Çoklu çizim yapýlacak objeleri ekranlarýna çizdirir
 	/// </summary>
 	void draw() {
-		for (int i = 0; i < nextMulti; i++) {
-			objects[i]->draw();
-		}
 		for (int i = 0; i < nextGmObject; i++) {
 			gmObjects[i]->draw();
 		}

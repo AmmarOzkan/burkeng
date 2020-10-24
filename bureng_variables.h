@@ -44,7 +44,7 @@ struct f2 {
 /// <summary>
 /// X ve Y verisi tutan Vector2
 /// </summary>
-struct valueXY {
+struct Vector2 {
 	float x, y;
 };
 
@@ -55,14 +55,8 @@ struct PhyVal {
 	float gravity;
 };
 
-/// <summary>
-/// Çarpýþma kontrolcüsü verilerini tutan deðiþken
-/// </summary>
-struct Trigger {
-	float posX, posY, height, width;
-	std::string id;
-	std::string publicId;
-};
+
+struct TriggerId { std::string id, publicId; };
 
 /// <summary>
 /// Objelerin çarpýþmalarýndan sonra döndürülen deðer.
@@ -95,5 +89,10 @@ struct superStr {
 struct colorByChar {
 	char ch;
 	int r, g, b;
+};
+
+struct Trigger {
+	Vector2 pos,scale;
+	std::string id,publicId;
 };
 #endif

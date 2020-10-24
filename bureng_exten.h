@@ -27,7 +27,7 @@ namespace bex {
 		float perf;
 	public:
 		Object(float movePerf,Texturee texture, sf::RenderWindow* urWindow, valueXY* urCamera, std::string id, std::string publicId)
-			: gameobject(texture, 0, 0, 1, 1, false, urWindow, urCamera),
+			: gameobject(texture, 0, 0, texture.width, texture.height, true, urWindow, urCamera),
 			physicsobject(&gameobject, false, 0.0, id,publicId),
 			objAnim(id),
 			perf(movePerf)
