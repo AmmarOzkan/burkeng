@@ -3,8 +3,8 @@
 #ifndef BURENGTRIGGERS
 #define BURENGTRIGGERS
 bool isColliding(Trigger t1, Trigger t2) {
-	bool b = t1.pos.x + t1.scale.x > t2.pos.x && t2.pos.x + t2.scale.x > t2.pos.x;
-	bool a = t1.pos.y + t1.scale.y > t2.pos.y && t2.pos.y + t2.scale.y > t2.pos.y;
+	bool b = t1.pos.x + t1.scale.x > t2.pos.x && t2.pos.x + t2.scale.x > t1.pos.x;
+	bool a = t1.pos.y + t1.scale.y > t2.pos.y && t2.pos.y + t2.scale.y > t1.pos.y;
 	return a && b;
 }
 

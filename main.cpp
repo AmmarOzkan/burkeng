@@ -57,8 +57,11 @@ int main(int argc, char* argv[])
 	//std::string id, publicId;
 
 	Physics testPhyObject(&characterObject);
-	Trigger tr = { {800,600},{100,100},"invisibleWall","world" };
+	Trigger tr = { {350,500},{100,100},"invisibleWall","world" };
 	testPhyObject.addTrigger(&tr);
+
+	Texturee wallI = setTexturee("WALL", "res/test_imgs/menu.png");
+	gameObject wall(wallI,350,500,100,100,&window,&camera);
 
 	while (window.isOpen()) {
 		testF += (speed*prev) + (-speed*!prev);
@@ -73,13 +76,15 @@ int main(int argc, char* argv[])
 		if (leftMove) { characterObject.setTexturee(rwa.animate()); speed = -1.5; }
 		else if (rightMove) { characterObject.setTexturee(lwa.animate()); prev = true; speed = 1.5;}
 		else { characterObject.setTexturee(charIdle); speed = 0.5; }
-		testPhyObject.move({ speed,2.5 });
 
-		characterObject.setRotation(testF);
+		testPhyObject.move({ speed,2.5 },false);
+
+		characterObject.setRotation(0);
 
 
 		window.clear(sf::Color::Color(50, 25, 25));
 		testPhyObject.phyDraw();
+		wall.draw();
 		window.display();
 	}
 

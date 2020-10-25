@@ -31,49 +31,50 @@ public:
 
 	
 
-	void moveX(float willMove) {
+	void moveX(float willMove,bool physics) {
 		resetTrigger();
 		Vector2 position = gameobject->position()[0];
 		position.x += willMove;
 		TriggerId id = { "","" };
 		trigger = getTriggerFor(gameobject);
 		for (int i = 0; i < triggerControlCounter; i++) {
-			setTrigger(&trigger, position.x, position.y, gameobject->getTexturee()->width, gameobject->getTexturee()->height, gameobject->getScale()->x, gameobject->getScale()->y, trigger.id, trigger.publicId);
+			trigger.pos.x = position.x; trigger.pos.y = position.y;
 			if (isColliding(trigger, willControl[i][0])) {
 				id = { willControl[i]->id, willControl[i]->publicId };
-				if (willMove > 0) position.x = willControl[i]->pos.x - (gameobject->getScale()->x * gameobject->getTexturee()->width);
-				else if (willMove < 0) position.x = willControl[i]->pos.x + (willControl[i]->scale.x);
+				if (willMove > 0) position.x = willControl[i]->pos.x -(trigger.scale.x + 0.01);
+				else if (willMove < 0) position.x = willControl[i]->pos.x + willControl[i]->scale.x+0.01;
+				if (physics)force.x = 0;
 			}
 		}
-		std::cout << position.x<<std::endl;
 		gameobject->setPosition(position);
 	}
 
-	void moveY(float willMove) {
+	void moveY(float willMove,bool physics) {
 		resetTrigger();
 		Vector2 position = gameobject->position()[0];
 		position.y += willMove;
 		TriggerId id = { "","" };
 		trigger = getTriggerFor(gameobject);
 		for (int i = 0; i < triggerControlCounter; i++) {
-			setTrigger(&trigger, position.x, position.y, gameobject->getTexturee()->width, gameobject->getTexturee()->height, gameobject->getScale()->x, gameobject->getScale()->y, trigger.id, trigger.publicId);
+			trigger.pos.x = position.x; trigger.pos.y = position.y;
 			if (isColliding(trigger, willControl[i][0])) {
 				id = { willControl[i]->id, willControl[i]->publicId };
-				if (willMove > 0) position.y = position.y - (gameobject->getScale()->y * gameobject->getTexturee()->width);
-				else if (willMove < 0) position.y = willControl[i]->pos.y + (willControl[i]->scale.y);
+				if (willMove > 0) position.y = willControl[i][0].pos.y-(trigger.scale.y + 0.01);
+				else if (willMove < 0) position.y = willControl[i]->pos.y + willControl[i]->scale.y+0.01;
+				if (physics)force.y = 0;
 			}
 		}
-		std::cout << position.y << std::endl;
 		gameobject->setPosition(position);
 	}
 
-	void move(Vector2 v) { moveX(v.x);moveY(v.y);}
-	void phy() {move(force);force = { 0,0 };}
+	void move(Vector2 v,bool physics) { moveY(v.y, physics); moveX(v.x, physics); }
+	void phy() {move(force,true);}
 
 	void phyDraw() {phy();gameobject->draw();}
 	gameObject* gm() {return gameobject;}
 
 	void setGm(gameObject* gmo) { gameobject = gmo; }
+
 
 	void addTrigger(Trigger *trigger) {
 		willControl[triggerControlCounter++] = trigger;
