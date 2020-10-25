@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 	//std::string id, publicId;
 
 	Physics testPhyObject(&characterObject);
-	Trigger tr = { {10,100},{800,600},"invisibleWall","world" };
+	Trigger tr = { {800,600},{100,100},"invisibleWall","world" };
 	testPhyObject.addTrigger(&tr);
 
 	while (window.isOpen()) {
@@ -73,11 +73,13 @@ int main(int argc, char* argv[])
 		if (leftMove) { characterObject.setTexturee(rwa.animate()); speed = -1.5; }
 		else if (rightMove) { characterObject.setTexturee(lwa.animate()); prev = true; speed = 1.5;}
 		else { characterObject.setTexturee(charIdle); speed = 0.5; }
-		testPhyObject.move({ -10,-10 });
+		testPhyObject.move({ speed,2.5 });
 
 		characterObject.setRotation(testF);
+
+
 		window.clear(sf::Color::Color(50, 25, 25));
-		characterObject.draw();
+		testPhyObject.phyDraw();
 		window.display();
 	}
 
